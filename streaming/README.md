@@ -14,9 +14,9 @@ First the list of identifiers needs to be uploaded, then this task can be run on
 
 Then set up a suitable Python environment and install the code and any necessary dependencies:
 
-   $ virtualenv -p python2.6 venv27-blitter
-   $ source venv27-blitter/bin/activate
-   $ python setup.py install
+    $ virtualenv -p python2.6 venv27-blitter
+    $ source venv27-blitter/bin/activate
+    $ python setup.py install
 
 This will run an example, directly from the source folder:
 
@@ -30,8 +30,14 @@ This runs two separate tasks. The first task, called `RunJpylyzer`, is the task 
 Jpylyzer on it. The resulting XML is stored as e.g. `blitter/jpylyzer.tsv/part-*`, and so we can run various analyses
 over this output without re-downloading the images.
 
+The format of the output data is:
+
+    <id><tab><xml-as-single-line-string><newline>
+
+where the `<id>` is something like `vdc_100022551931.0x000001`.
+
 This output data is the pre-requisite for the GenerateBlit task, which reads the XML in and transforms it into 'blit'
-XML, which looks like this:
+XML, which is stored in the same tab-separated format as above, but looks like this when pretty-printed:
 
 ```xml
 <?xml version="1.0"?>
