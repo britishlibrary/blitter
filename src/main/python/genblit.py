@@ -161,9 +161,10 @@ def build(file):
 '''
     
 if __name__ == '__main__':
-    xml = build('../../../src/test/resources/vdc_100022551931.0x000001')
+    xml = build('../../../src/test/resources/test-data/vdc_100022551931.0x000001')
     xmlOut = ET.tostring(xml, 'UTF-8', 'xml')
-    with open("test.xml", "w") as f: 
-        f.write(xmlOut)
+    f = open("test.xml", "w")
+    f.write(xmlOut)
+    f.close()
     
 
