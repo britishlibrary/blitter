@@ -11,8 +11,12 @@ if __name__ == '__main__':
     jpylyzer_xml = jpylyzer.checkOneFile('../../../src/test/resources/test-data/vdc_100022551931.0x000001')
     
     blit_xml = genblit.to_blit(jpylyzer_xml)
-    xmlOut = ET.tostring(blit_xml, 'UTF-8', 'xml')
     
+    xmlOut = ET.tostring(blit_xml, 'UTF-8', 'xml')
+    xmlPretty = minidom.parseString(xmlOut).toprettyxml('    ')
+    
+    print(xmlPretty)
+
     xmlDict = xmltodict.parse(xmlOut)
     xmlJson = json.dumps(xmlDict, indent=True)
     
