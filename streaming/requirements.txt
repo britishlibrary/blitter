@@ -1,8 +1,10 @@
 backports-abc==0.5
+backports.ssl-match-hostname==3.5.0.1
 certifi==2016.9.26
 docutils==0.12
 lockfile==0.12.2
 luigi==2.4.0
+mechanize==0.2.5
 python-daemon==2.1.2
 singledispatch==3.4.0.3
 six==1.10.0

@@ -2,12 +2,14 @@ import os
 import luigi
 import luigi.contrib.hadoop
 import urllib
+import logging
 import tempfile
 import xml.etree.ElementTree as ET
 
 import jpylyzer.jpylyzer as jpylyzer # Imported from https://github.com/britishlibrary/jpylyzer
 import genblit
 
+logger = logging.getLogger('luigi-interface')
 
 class ExternalListFile(luigi.ExternalTask):
     input_file = luigi.Parameter()
@@ -37,7 +39,7 @@ class GenerateBlit(luigi.contrib.hadoop.JobTask):
         return ExternalListFile(self.input_file)
 
     def extra_modules(self):
-        return ['jpylyzer']
+        return [jpylyzer, genblit]
 
     def mapper(self, line):
         '''
@@ -49,10 +51,16 @@ class GenerateBlit(luigi.contrib.hadoop.JobTask):
         :return:
         '''
 
-        # Download to temp file:
+        
+        if line == '':
+            return
+
+	# Download to temp file:
         (jp2_fd, jp2_file) = tempfile.mkstemp()
-        download_url = \
-            "https://github.com/anjackson/blitter/blob/master/jython/src/test/resources/test-data/%s?raw=true" % line
+        #download_url = \
+        #    "https://github.com/anjackson/blitter/blob/master/jython/src/test/resources/test-data/%s?raw=true" % line
+        download_url = "http://nellie-private.bl.uk:14000/webhdfs/v1/user/anjackson/%s?op=OPEN&user.name=hdfs" % line
+        logger.warning(download_url)
         (tempfilename, headers) = urllib.urlretrieve(download_url, jp2_file)
 
         # Jpylyser-it:
@@ -65,7 +73,7 @@ class GenerateBlit(luigi.contrib.hadoop.JobTask):
         xml_out = ET.tostring(blit_xml, 'UTF-8', 'xml')
         xml_out = xml_out.replace('\n','')
 
-        print(xml_out)
+        logger.info(xml_out)
 
         # Delete the temp file:
         os.remove(jp2_file)
