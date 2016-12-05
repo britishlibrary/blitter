@@ -63,7 +63,7 @@ class RunJpylyzer(luigi.contrib.hadoop.JobTask):
         return ExternalListFile(self.input_file)
 
     def extra_modules(self):
-        return [jpylyzer]
+        return [jpylyzer,genblit]
 
     def mapper(self, line):
         """
@@ -93,7 +93,7 @@ class RunJpylyzer(luigi.contrib.hadoop.JobTask):
 
             # Map to a string, and strip out newlines:
             jpylyzer_xml_out = ET.tostring(jpylyzer_xml, 'UTF-8', 'xml')
-            jpylyzer_xml_out = jpylyzer_xml_out.replace('\n','')
+            jpylyzer_xml_out = jpylyzer_xml_out.replace('\n', ' ').replace('\r', '')
 
             # Delete the temp file:
             os.remove(jp2_file)
@@ -128,10 +128,10 @@ class GenerateBlit(luigi.contrib.hadoop.JobTask):
         return RunJpylyzer(self.input_file)
 
     def output(self):
-        return luigi.contrib.hdfs.HdfsTarget("data/blit.tsv")
+        return luigi.contrib.hdfs.HdfsTarget("blitter/blit.tsv")
 
     def extra_modules(self):
-        return [genblit]
+        return [jpylyzer,genblit]
 
     def mapper(self, line):
         """
@@ -150,7 +150,7 @@ class GenerateBlit(luigi.contrib.hadoop.JobTask):
 
         try:
             # Split the input:
-            (id, jpylyzer_xml_out) = line.split('\t', 1)
+            id, jpylyzer_xml_out = line.strip().split("\t",1)
 
             # Re-parse the XML:
             jpylyzer_xml = ET.fromstring(jpylyzer_xml_out)
@@ -160,13 +160,14 @@ class GenerateBlit(luigi.contrib.hadoop.JobTask):
 
             # Map to a string, and strip out newlines:
             blit_xml_out = ET.tostring(blit_xml, 'UTF-8', 'xml')
-            blit_xml_out = blit_xml_out.replace('\n','')
+            blit_xml_out = blit_xml_out.replace('\n', ' ').replace('\r', '')
 
         except Exception as e:
+            id = line
             blit_xml_out = "FAILED! %s" % e
 
         # And return both forms:
-        yield line, blit_xml_out
+        yield id, blit_xml_out
 
     def reducer(self, key, values):
         """
