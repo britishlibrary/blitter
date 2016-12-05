@@ -51,32 +51,36 @@ class GenerateBlit(luigi.contrib.hadoop.JobTask):
         :return:
         '''
 
-        
+
+        # Ignore blank lines:
         if line == '':
             return
 
-	# Download to temp file:
-        (jp2_fd, jp2_file) = tempfile.mkstemp()
-        #download_url = \
-        #    "https://github.com/anjackson/blitter/blob/master/jython/src/test/resources/test-data/%s?raw=true" % line
-        download_url = "http://nellie-private.bl.uk:14000/webhdfs/v1/user/anjackson/%s?op=OPEN&user.name=hdfs" % line
-        logger.warning(download_url)
-        (tempfilename, headers) = urllib.urlretrieve(download_url, jp2_file)
+        try:
+            # Download to temp file:
+            (jp2_fd, jp2_file) = tempfile.mkstemp()
+            #download_url = \
+            #    "https://github.com/anjackson/blitter/blob/master/jython/src/test/resources/test-data/%s?raw=true" % line
+            download_url = "http://nellie-private.bl.uk:14000/webhdfs/v1/user/anjackson/%s?op=OPEN&user.name=hdfs" % line
+            logger.warning(download_url)
+            (tempfilename, headers) = urllib.urlretrieve(download_url, jp2_file)
 
-        # Jpylyser-it:
-        jpylyzer_xml = jpylyzer.checkOneFile(jp2_file)
+            # Jpylyser-it:
+            jpylyzer_xml = jpylyzer.checkOneFile(jp2_file)
 
-        # Convert to blit xml:
-        blit_xml = genblit.to_blit(jpylyzer_xml)
+            # Convert to blit xml:
+            blit_xml = genblit.to_blit(jpylyzer_xml)
 
-        # Map to a string, and strip out newlines:
-        xml_out = ET.tostring(blit_xml, 'UTF-8', 'xml')
-        xml_out = xml_out.replace('\n','')
+            # Map to a string, and strip out newlines:
+            xml_out = ET.tostring(blit_xml, 'UTF-8', 'xml')
+            xml_out = xml_out.replace('\n','')
 
-        logger.info(xml_out)
+            logger.info(xml_out)
 
-        # Delete the temp file:
-        os.remove(jp2_file)
+            # Delete the temp file:
+            os.remove(jp2_file)
+        except Exception as e:
+            xml_out = "FAILED! %s" % e
 
         # And return:
         yield line, xml_out
