@@ -1,16 +1,33 @@
-import jpylyzer.etpatch as ET
-import jpylyzer.jpylyzer as jpylyzer
-from xml.dom import minidom
+import xml.etree.ElementTree as ET
 
-def analyse(file):
-    return jpylyzer.checkOneFile(file)
 
-def build(file):
-    j = jpylyzer.checkOneFile(file)
+
+def to_blit(jpylyzer_xml):
+    '''
+    Generates 'blit' xml from jpylyzer output.
     
-    prop = j.find('properties')
+    ----
     
-    ET.ET.register_namespace('blit',"http://bl.uk/namespaces/blit")
+    B.4 Tile-component division into resolutions and sub-bands
+    
+    Each image component is wavelet transformed with N_L decomposition levels as explained in Annex F. As a result, the
+    component is available at N_L + 1 distinct resolutions, denoted r = 0,1,...,N_L. The lowest resolution, r = 0, is represented by
+    the N_L LL band. In general, resolution r is obtained by discarding sub-bands nHH, nHL, nLH for 
+    n = 1 through N_L-r and reconstructing the image component from the remaining sub-bands.
+    '''
+    '''
+    Note the number of 'levels' corresponds to the number of times the DWT is applied.
+    This means there are levels+1 resolutions, with the lowest corresponding to the reduced original.
+    
+    Thus, when there are 6 levels, 7  precinct dimensions are found, starting with the smallest (thumbnail), up to the largest.
+    
+    Hence, the first (zeroth) resolution does not correspond to a dwt_level. The second (r=1) resolution corresponds to the 
+    last (N_L - 1) level.
+    '''
+    
+    prop = jpylyzer_xml.find('properties')
+    
+    ET.register_namespace('blit',"http://bl.uk/namespaces/blit")
     
     root = ET.Element('blit:blimagetech', 
                       { "xmlns:xsi": "http://www.w3.org/2001/XMLSchema-instance", 
@@ -103,68 +120,8 @@ def build(file):
             # Construct the next levels string:
             dwt_levels += ",%i" % l
 
-    
-    '''
-    B.4 Tile-component division into resolutions and sub-bands
-    
-    Each image component is wavelet transformed with N_L decomposition levels as explained in Annex F. As a result, the
-    component is available at N_L + 1 distinct resolutions, denoted r = 0,1,...,N_L. The lowest resolution, r = 0, is represented by
-    the N_L LL band. In general, resolution r is obtained by discarding sub-bands nHH, nHL, nLH for 
-    n = 1 through N_L-r and reconstructing the image component from the remaining sub-bands.
-    '''
-    '''
-    Note the number of 'levels' corresponds to the number of times the DWT is applied.
-    This means there are levels+1 resolutions, with the lowest corresponding to the reduced original.
-    
-    Thus, when there are 6 levels, 7  precinct dimensions are found, starting with the smallest (thumbnail), up to the largest.
-    
-    Hence, the first (zeroth) resolution does not correspond to a dwt_level. The second (r=1) resolution corresponds to the 
-    last (N_L - 1) level.
-    '''
-    
     return root
+
     
-    
-'''        
-
-            if (data.Precincts != null) {
-                string jp2levels = "";
-                int currSize = data.Precincts[0];
-                XElement precincts = new XElement(blit + "");
-                for (int i=1; i<=data.Precincts.Length;i++)
-                {
-                    jp2levels += "," + i;
-                    if (i == data.Precincts.Length || currSize != data.Precincts[i])
-                    {
-                        jp2levels = jp2levels.Substring(1);
-
-                        precincts.Add(
-                            new XElement(blit + "",
-                                new XAttribute("dwt_level", jp2levels),
-                                new XElement(blit + "jp2_precinct_x", currSize),
-                                new XElement(blit + "jp2_precinct_y", currSize)
-                                )
-                        );
-
-                        jp2levels = "";
-
-                        if (i != data.Precincts.Length)
-                            currSize = data.Precincts[i];
-                    }
-                }
-
-                XElement format = doc.Descendants(blit + "format").FirstOrDefault();
-                format.Add(precincts);
-            }
-
-            return doc;
-'''
-    
-if __name__ == '__main__':
-    xml = build('../../../src/test/resources/test-data/vdc_100022551931.0x000001')
-    xmlOut = ET.tostring(xml, 'UTF-8', 'xml')
-    f = open("test.xml", "w")
-    f.write(xmlOut)
-    f.close()
     
 
