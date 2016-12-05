@@ -112,7 +112,7 @@ class RunJpylyzer(luigi.contrib.hadoop.JobTask):
         :return:
         """
         for value in values:
-            yield key, value
+            yield "%s\t%s" % (key, value)
         # An actual reducer:
         #yield key, sum(values)
 
@@ -180,7 +180,7 @@ class GenerateBlit(luigi.contrib.hadoop.JobTask):
         """
 
         for value in values:
-            yield key, value
+            yield "%s\t%s" % (key, value)
         # An actual reducer:
         #yield key, sum(values)
 
