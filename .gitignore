@@ -1,7 +1,9 @@
 .settings
 .classpath
+.idea
 .project
 .pydevproject
 target
+venv*
 
 *.pyc
