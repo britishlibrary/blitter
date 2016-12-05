@@ -153,6 +153,7 @@ class GenerateBlit(luigi.contrib.hadoop.JobTask):
             id, jpylyzer_xml_out = line.strip().split("\t",1)
 
             # Re-parse the XML:
+            ET.register_namespace("", "http://openpreservation.org/ns/jpylyzer/")
             jpylyzer_xml = ET.fromstring(jpylyzer_xml_out)
 
             # Convert to blit xml:

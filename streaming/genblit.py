@@ -24,11 +24,13 @@ def to_blit(jpylyzer_xml):
     Hence, the first (zeroth) resolution does not correspond to a dwt_level. The second (r=1) resolution corresponds to the 
     last (N_L - 1) level.
     '''
-    
-    prop = jpylyzer_xml.find('properties')
+
+    ns = {'jpy': "http://openpreservation.org/ns/jpylyzer/"}
+
+    prop = jpylyzer_xml.find('jpy:properties', ns)
     
     ET.register_namespace('blit',"http://bl.uk/namespaces/blit")
-    
+
     root = ET.Element('blit:blimagetech', 
                       { "xmlns:xsi": "http://www.w3.org/2001/XMLSchema-instance", 
                        "xmlns:xsd": "http://www.w3.org/2001/XMLSchema", 
@@ -42,63 +44,63 @@ def to_blit(jpylyzer_xml):
     
     dimw = ET.SubElement(dim, "blit:width")
     dimw.set("unit", "pixel")
-    dimw.text = prop.find('jp2HeaderBox/imageHeaderBox/width').text    
+    dimw.text = prop.find('jpy:jp2HeaderBox/jpy:imageHeaderBox/jpy:width', ns).text
     dimh = ET.SubElement(dim, "blit:height")
     dimh.set("unit", "pixel")
-    dimh.text = prop.find('jp2HeaderBox/imageHeaderBox/height').text
+    dimh.text = prop.find('jpy:jp2HeaderBox/jpy:imageHeaderBox/jpy:height', ns).text
     
     res = ET.SubElement(image, "blit:resolution")
     resv = ET.SubElement(res, "blit:x")
     resv.set("unit", "ppi")
-    resv.text = str(int(float(prop.find('jp2HeaderBox/resolutionBox/captureResolutionBox/hRescInPixelsPerInch').text)))
+    resv.text = str(int(float(prop.find('jpy:jp2HeaderBox/jpy:resolutionBox/jpy:captureResolutionBox/jpy:hRescInPixelsPerInch', ns).text)))
     resh = ET.SubElement(res, "blit:y")
     resh.set("unit", "ppi")
-    resh.text = str(int(float(prop.find('jp2HeaderBox/resolutionBox/captureResolutionBox/vRescInPixelsPerInch').text)))
+    resh.text = str(int(float(prop.find('jpy:jp2HeaderBox/jpy:resolutionBox/jpy:captureResolutionBox/jpy:vRescInPixelsPerInch', ns).text)))
     
     chan = ET.SubElement(image, "blit:channels")
-    chan.text = prop.find('jp2HeaderBox/imageHeaderBox/nC').text
+    chan.text = prop.find('jpy:jp2HeaderBox/jpy:imageHeaderBox/jpy:nC', ns).text
 
     chan = ET.SubElement(image, "blit:bitsperchannel")
-    chan.text = prop.find('jp2HeaderBox/imageHeaderBox/bPCDepth').text
+    chan.text = prop.find('jpy:jp2HeaderBox/jpy:imageHeaderBox/jpy:bPCDepth', ns).text
 
     # Format section:    
     fmt = ET.SubElement(image, "blit:format")
     fmt.set("xsi:type","blit:jpeg2000")
     
     jp2_compression = ET.SubElement(fmt, "blit:jp2_compression")
-    if "irreversible" in prop.find('contiguousCodestreamBox/cod/transformation').text:
+    if "irreversible" in prop.find('jpy:contiguousCodestreamBox/jpy:cod/jpy:transformation', ns).text:
         jp2_compression.set("type","JPEG2000_Lossy")
     else: 
         jp2_compression.set("type","JPEG2000_Lossless")
     
     jp2_codeblocksize = ET.SubElement(fmt, "blit:jp2_codeblocksize")
     jp2_cbx = ET.SubElement(jp2_codeblocksize,"blit:jp2_cbx")
-    jp2_cbx.text = prop.find('contiguousCodestreamBox/cod/codeBlockWidth').text
+    jp2_cbx.text = prop.find('jpy:contiguousCodestreamBox/jpy:cod/jpy:codeBlockWidth', ns).text
     jp2_cby = ET.SubElement(jp2_codeblocksize,"blit:jp2_cby")
-    jp2_cby.text = prop.find('contiguousCodestreamBox/cod/codeBlockHeight').text
+    jp2_cby.text = prop.find('jpy:contiguousCodestreamBox/jpy:cod/jpy:codeBlockHeight', ns).text
     
     jp2_layers = ET.SubElement(fmt, "blit:jp2_layers")
-    jp2_layers.text = prop.find('contiguousCodestreamBox/cod/layers').text
+    jp2_layers.text = prop.find('jpy:contiguousCodestreamBox/jpy:cod/jpy:layers', ns).text
     
     jp2_progressionorder = ET.SubElement(fmt, "blit:jp2_progressionorder")
-    jp2_progressionorder.text = prop.find('contiguousCodestreamBox/cod/order').text
+    jp2_progressionorder.text = prop.find('jpy:contiguousCodestreamBox/jpy:cod/jpy:order', ns).text
         
     jp2_levels = ET.SubElement(fmt, "blit:jp2_levels")
-    jp2_levels.text = prop.find('contiguousCodestreamBox/cod/levels').text
+    jp2_levels.text = prop.find('jpy:contiguousCodestreamBox/jpy:cod/jpy:levels', ns).text
         
     jp2_tile_dimensions = ET.SubElement(fmt, "blit:jp2_tile_dimensions")
     jp2_tile = ET.SubElement(jp2_tile_dimensions, "blit:jp2_tile")
     jp2_tile.set("dwt_level", ",".join(str(x) for x in range(1,int(jp2_levels.text) + 1)))
     jp2_tile_x = ET.SubElement(jp2_tile,"blit:jp2_tile_x")
-    jp2_tile_x.text = prop.find('contiguousCodestreamBox/siz/xTsiz').text
+    jp2_tile_x.text = prop.find('jpy:contiguousCodestreamBox/jpy:siz/jpy:xTsiz', ns).text
     jp2_tile_y = ET.SubElement(jp2_tile,"blit:jp2_tile_y")
-    jp2_tile_y.text = prop.find('contiguousCodestreamBox/siz/yTsiz').text
+    jp2_tile_y.text = prop.find('jpy:contiguousCodestreamBox/jpy:siz/jpy:yTsiz', ns).text
     
     # Extract the precincts if present
-    if prop.find('contiguousCodestreamBox/cod/precincts').text == "yes":
+    if prop.find('jpy:contiguousCodestreamBox/jpy:cod/jpy:precincts', ns).text == "yes":
         jp2_precincts = ET.SubElement(fmt, "blit:jp2_precincts")
-        Psx = prop.findall('contiguousCodestreamBox/cod/precinctSizeX')
-        Psy = prop.findall('contiguousCodestreamBox/cod/precinctSizeY')
+        Psx = prop.findall('jpy:contiguousCodestreamBox/jpy:cod/jpy:precinctSizeX', ns)
+        Psy = prop.findall('jpy:contiguousCodestreamBox/jpy:cod/jpy:precinctSizeY', ns)
         dwt_levels = ""
         currSize  = Psx[6].text
         for l in range(1,len(Psx) + 1): # 1,2,3,4,5,6,7
