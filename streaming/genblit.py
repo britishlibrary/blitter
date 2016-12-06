@@ -72,10 +72,10 @@ def to_blit(jpylyzer_xml):
                       ns).text))))
     except:
         resv.text = str(int(round(float(
-            prop.find('jpy:jp2HeaderBox/jpy:resolutionBox/jpy:displayResolutionBox/jpy:hRescInPixelsPerInch',
+            prop.find('jpy:jp2HeaderBox/jpy:resolutionBox/jpy:displayResolutionBox/jpy:hResdInPixelsPerInch',
                       ns).text))))
         resh.text = str(int(round(float(
-            prop.find('jpy:jp2HeaderBox/jpy:resolutionBox/jpy:displayResolutionBox/jpy:vRescInPixelsPerInch',
+            prop.find('jpy:jp2HeaderBox/jpy:resolutionBox/jpy:displayResolutionBox/jpy:vResdInPixelsPerInch',
                       ns).text))))
 
     chan = ET.SubElement(image, "blit:channels")
