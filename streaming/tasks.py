@@ -210,7 +210,7 @@ class GenerateBlitZip(luigi.Task):
         return luigi.LocalTarget("%s.zip" % self.input_file)
 
     def run(self):
-        with zipfile.ZipFile(self.output(),'w') as out_file:
+        with zipfile.ZipFile(self.output().path, 'w', compression=zipfile.ZIP_DEFLATED, allowZip64=False) as out_file:
             with self.input().open('r') as in_file:
                 for line in in_file:
                     ark, xmlstr = line.strip().split("\t",1)
