@@ -60,11 +60,24 @@ def to_blit(jpylyzer_xml):
     res = ET.SubElement(image, "blit:resolution")
     resv = ET.SubElement(res, "blit:x")
     resv.set("unit", "ppi")
-    resv.text = str(int(float(prop.find('jpy:jp2HeaderBox/jpy:resolutionBox/jpy:captureResolutionBox/jpy:hRescInPixelsPerInch', ns).text)))
     resh = ET.SubElement(res, "blit:y")
     resh.set("unit", "ppi")
-    resh.text = str(int(float(prop.find('jpy:jp2HeaderBox/jpy:resolutionBox/jpy:captureResolutionBox/jpy:vRescInPixelsPerInch', ns).text)))
-    
+    # Attempt to get capture resolution, fall back on display resolution
+    try:
+        resv.text = str(int(round(float(
+            prop.find('jpy:jp2HeaderBox/jpy:resolutionBox/jpy:captureResolutionBox/jpy:hRescInPixelsPerInch',
+                      ns).text))))
+        resh.text = str(int(round(float(
+            prop.find('jpy:jp2HeaderBox/jpy:resolutionBox/jpy:captureResolutionBox/jpy:vRescInPixelsPerInch',
+                      ns).text))))
+    except:
+        resv.text = str(int(round(float(
+            prop.find('jpy:jp2HeaderBox/jpy:resolutionBox/jpy:displayResolutionBox/jpy:hRescInPixelsPerInch',
+                      ns).text))))
+        resh.text = str(int(round(float(
+            prop.find('jpy:jp2HeaderBox/jpy:resolutionBox/jpy:displayResolutionBox/jpy:vRescInPixelsPerInch',
+                      ns).text))))
+
     chan = ET.SubElement(image, "blit:channels")
     chan.text = prop.find('jpy:jp2HeaderBox/jpy:imageHeaderBox/jpy:nC', ns).text
 
