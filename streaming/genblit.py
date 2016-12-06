@@ -1,5 +1,13 @@
+import sys
 import xml.etree.ElementTree as ET
 
+def xmlstr_to_blit(jpylyzer_xml_out):
+    # Re-parse the XML:
+    ET.register_namespace("", "http://openpreservation.org/ns/jpylyzer/")
+    jpylyzer_xml = ET.fromstring(jpylyzer_xml_out)
+
+    # Convert to blit xml:
+    blit_xml = to_blit(jpylyzer_xml)
 
 
 def to_blit(jpylyzer_xml):
@@ -125,5 +133,7 @@ def to_blit(jpylyzer_xml):
     return root
 
     
-    
+if __name__ == '__main__':
+    xmlstr = open(sys.argv[1],"rb").read()
+    print(xmlstr_to_blit(xmlstr)) 
 
