@@ -7,7 +7,7 @@ def xmlstr_to_blit(jpylyzer_xml_out):
     jpylyzer_xml = ET.fromstring(jpylyzer_xml_out)
 
     # Convert to blit xml:
-    blit_xml = to_blit(jpylyzer_xml)
+    return to_blit(jpylyzer_xml)
 
 
 def to_blit(jpylyzer_xml):
@@ -148,5 +148,5 @@ def to_blit(jpylyzer_xml):
     
 if __name__ == '__main__':
     xmlstr = open(sys.argv[1],"rb").read()
-    print(xmlstr_to_blit(xmlstr)) 
+    print(ET.tostring(xmlstr_to_blit(xmlstr)))
 
