@@ -20,7 +20,7 @@ class blit(luigi.Config):
         url_template = String template to construct a URL from an identifier.
 
     """
-    url_template = luigi.Parameter(default="http://nellie-private.bl.uk:14000/webhdfs/v1/user/anjackson/%s?op=OPEN&user.name=hdfs")
+    url_template = luigi.Parameter()
 
 
 class ExternalListFile(luigi.ExternalTask):
@@ -65,6 +65,9 @@ class RunJpylyzer(luigi.contrib.hadoop.JobTask):
     def extra_modules(self):
         return [jpylyzer,genblit]
 
+    def extra_files(self):
+        return ["luigi.cfg"]
+
     def mapper(self, line):
         """
         Each line should be an identifier of a JP2 file, e.g. 'vdc_100022551931.0x000001'
@@ -84,7 +87,8 @@ class RunJpylyzer(luigi.contrib.hadoop.JobTask):
             (jp2_fd, jp2_file) = tempfile.mkstemp()
 
             # Construct URL and download:
-            download_url = blit().url_template % line
+            id = line.replace("ark:/81055/","")
+            download_url = blit().url_template % id
             logger.warning("Downloading: %s " % download_url)
             (tempfilename, headers) = urllib.urlretrieve(download_url, jp2_file)
 
@@ -99,6 +103,7 @@ class RunJpylyzer(luigi.contrib.hadoop.JobTask):
             os.remove(jp2_file)
         except Exception as e:
             jpylyzer_xml_out = "FAILED! %s" % e
+            raise(e)
 
         # And return:
         yield line, jpylyzer_xml_out
