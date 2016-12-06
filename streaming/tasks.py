@@ -137,6 +137,7 @@ class GenerateBlit(luigi.contrib.hadoop.JobTask):
         return RunJpylyzer(self.input_file)
 
     def output(self):
+        # FIXME use os.dirname to generate output filename from input filename (also above too)
         return luigi.contrib.hdfs.HdfsTarget("blitter/blit.tsv")
 
     def extra_modules(self):

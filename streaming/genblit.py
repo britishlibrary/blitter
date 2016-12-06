@@ -64,19 +64,15 @@ def to_blit(jpylyzer_xml):
     resh.set("unit", "ppi")
     # Attempt to get capture resolution, fall back on display resolution
     try:
-        resv.text = str(int(round(float(
-            prop.find('jpy:jp2HeaderBox/jpy:resolutionBox/jpy:captureResolutionBox/jpy:hRescInPixelsPerInch',
-                      ns).text))))
-        resh.text = str(int(round(float(
-            prop.find('jpy:jp2HeaderBox/jpy:resolutionBox/jpy:captureResolutionBox/jpy:vRescInPixelsPerInch',
-                      ns).text))))
+        resv.text = prop.find('jpy:jp2HeaderBox/jpy:resolutionBox/jpy:captureResolutionBox/jpy:hRescInPixelsPerInch',
+                      ns).text
+        resh.text = prop.find('jpy:jp2HeaderBox/jpy:resolutionBox/jpy:captureResolutionBox/jpy:vRescInPixelsPerInch',
+                      ns).text
     except:
-        resv.text = str(int(round(float(
-            prop.find('jpy:jp2HeaderBox/jpy:resolutionBox/jpy:displayResolutionBox/jpy:hResdInPixelsPerInch',
-                      ns).text))))
-        resh.text = str(int(round(float(
-            prop.find('jpy:jp2HeaderBox/jpy:resolutionBox/jpy:displayResolutionBox/jpy:vResdInPixelsPerInch',
-                      ns).text))))
+        resv.text = prop.find('jpy:jp2HeaderBox/jpy:resolutionBox/jpy:displayResolutionBox/jpy:hResdInPixelsPerInch',
+                      ns).text
+        resh.text = prop.find('jpy:jp2HeaderBox/jpy:resolutionBox/jpy:displayResolutionBox/jpy:vResdInPixelsPerInch',
+                      ns).text
 
     chan = ET.SubElement(image, "blit:channels")
     chan.text = prop.find('jpy:jp2HeaderBox/jpy:imageHeaderBox/jpy:nC', ns).text
@@ -108,14 +104,23 @@ def to_blit(jpylyzer_xml):
         
     jp2_levels = ET.SubElement(fmt, "blit:jp2_levels")
     jp2_levels.text = prop.find('jpy:contiguousCodestreamBox/jpy:cod/jpy:levels', ns).text
-        
+
+    # Tile dimensions, falling back on image size if tile size is larger:
     jp2_tile_dimensions = ET.SubElement(fmt, "blit:jp2_tile_dimensions")
+    xsiz = int(prop.find('jpy:contiguousCodestreamBox/jpy:siz/jpy:xsiz', ns).text)
+    ysiz = int(prop.find('jpy:contiguousCodestreamBox/jpy:siz/jpy:ysiz', ns).text)
+    xTsiz = int(prop.find('jpy:contiguousCodestreamBox/jpy:siz/jpy:xTsiz', ns).text)
+    yTsiz = int(prop.find('jpy:contiguousCodestreamBox/jpy:siz/jpy:yTsiz', ns).text)
+    if yTsiz > ysiz:
+        yTsiz = ysiz
+    if xTsiz > xsiz:
+        xTsiz = xsiz
     jp2_tile = ET.SubElement(jp2_tile_dimensions, "blit:jp2_tile")
     jp2_tile.set("dwt_level", ",".join(str(x) for x in range(1,int(jp2_levels.text) + 1)))
     jp2_tile_x = ET.SubElement(jp2_tile,"blit:jp2_tile_x")
-    jp2_tile_x.text = prop.find('jpy:contiguousCodestreamBox/jpy:siz/jpy:xTsiz', ns).text
+    jp2_tile_x.text = str(xTsiz)
     jp2_tile_y = ET.SubElement(jp2_tile,"blit:jp2_tile_y")
-    jp2_tile_y.text = prop.find('jpy:contiguousCodestreamBox/jpy:siz/jpy:yTsiz', ns).text
+    jp2_tile_y.text = str(yTsiz)
     
     # Extract the precincts if present
     if prop.find('jpy:contiguousCodestreamBox/jpy:cod/jpy:precincts', ns).text == "yes":
