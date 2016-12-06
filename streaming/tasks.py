@@ -210,11 +210,10 @@ class GenerateBlitZip(luigi.Task):
 
     def run(self):
         with zipfile.ZipFile(self.output(),'w') as out_file:
-            for input in self.input():
-                with input.open('r') as in_file:
-                    for line in in_file:
-                        id, xmlstr = line.strip("\t",1).split()
-                        out_file.writestr(id, xmlstr)
+            with self.input().open('r') as in_file:
+                for line in in_file:
+                    id, xmlstr = line.strip("\t",1).split()
+                    out_file.writestr(id, xmlstr)
 
 
 if __name__ == '__main__':
