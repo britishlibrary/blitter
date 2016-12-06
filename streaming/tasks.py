@@ -213,7 +213,7 @@ class GenerateBlitZip(luigi.Task):
         with zipfile.ZipFile(self.output(),'w') as out_file:
             with self.input().open('r') as in_file:
                 for line in in_file:
-                    ark, xmlstr = line.strip("\t",1).split()
+                    ark, xmlstr = line.strip().split("\t",1)
                     ark_id = ark.replace("ark:/81055/","")
                     out_file.writestr("%s.xml" % ark_id, xmlstr)
 
