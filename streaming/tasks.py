@@ -2,6 +2,7 @@ import os
 import luigi
 import luigi.contrib.hadoop
 import urllib
+import zipfile
 import logging
 import tempfile
 import xml.etree.ElementTree as ET
@@ -195,5 +196,26 @@ class GenerateBlit(luigi.contrib.hadoop.JobTask):
         #yield key, sum(values)
 
 
+class GenerateBlitZip(luigi.Task):
+    """
+    ...
+    """
+    input_file = luigi.Parameter()
+
+    def requires(self):
+        return GenerateBlit(self.input_file)
+
+    def output(self):
+        return luigi.LocalTarget("%s.zip" % self.input_file)
+
+    def run(self):
+        with zipfile.ZipFile(self.output(),'w') as out_file:
+            for input in self.input():
+                with input.open('r') as in_file:
+                    for line in in_file:
+                        id, xmlstr = line.strip("\t",1).split()
+                        out_file.writestr(id, xmlstr)
+
+
 if __name__ == '__main__':
-    luigi.run(['GenerateBlit', '--input-file', 'test-input.txt', '--local-scheduler'])
+    luigi.run(['GenerateBlitZip', '--input-file', 'test-input.txt', '--local-scheduler'])
