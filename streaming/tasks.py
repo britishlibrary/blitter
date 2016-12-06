@@ -86,7 +86,11 @@ class RunJpylyzer(luigi.contrib.hadoop.JobTask):
             # Construct URL and download:
             download_url = blit().url_template % line
             logger.warning("Downloading: %s " % download_url)
-            (tempfilename, headers) = urllib.urlretrieve(download_url, jp2_file)
+            # Download via proxy, currently hard-coded and in-memory:
+            proxies = {'http': 'http://192.168.1.1:3127'}
+            data = urllib.urlopen(download_url, proxies=proxies).read()
+            with open(jp2_file,"wb") as f:
+                f.write(data)
 
             # Jpylyser-it:
             jpylyzer_xml = jpylyzer.checkOneFile(jp2_file)
