@@ -1,5 +1,6 @@
 import os
 import luigi
+import luigi.contrib.hdfs
 import luigi.contrib.hadoop
 import urllib
 import zipfile
@@ -58,7 +59,7 @@ class RunJpylyzer(luigi.contrib.hadoop.JobTask):
     input_file = luigi.Parameter()
 
     def output(self):
-        return luigi.contrib.hdfs.HdfsTarget("blitter/jpylyzer.tsv")
+        return luigi.contrib.hdfs.HdfsTarget("blitter/jpylyzer.tsv", format=luigi.contrib.hdfs.PlainDir)
 
     def requires(self):
         return ExternalListFile(self.input_file)
@@ -137,9 +138,9 @@ class GenerateBlit(luigi.contrib.hadoop.JobTask):
     def requires(self):
         return RunJpylyzer(self.input_file)
 
+    # FIXME use os.dirname to generate output filename from input filename (also above too)
     def output(self):
-        # FIXME use os.dirname to generate output filename from input filename (also above too)
-        return luigi.contrib.hdfs.HdfsTarget("blitter/blit.tsv")
+        return luigi.contrib.hdfs.HdfsTarget("blitter/blit.tsv", format=luigi.contrib.hdfs.PlainDir)
 
     def extra_modules(self):
         return [jpylyzer,genblit]
@@ -212,8 +213,9 @@ class GenerateBlitZip(luigi.Task):
         with zipfile.ZipFile(self.output(),'w') as out_file:
             with self.input().open('r') as in_file:
                 for line in in_file:
-                    id, xmlstr = line.strip("\t",1).split()
-                    out_file.writestr(id, xmlstr)
+                    ark, xmlstr = line.strip("\t",1).split()
+                    ark_id = ark.replace("ark:/81055/","")
+                    out_file.writestr("%s.xml" % ark_id, xmlstr)
 
 
 if __name__ == '__main__':
