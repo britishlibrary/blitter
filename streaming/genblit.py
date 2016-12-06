@@ -45,7 +45,7 @@ def to_blit(jpylyzer_xml):
                        "schemaLocation": "http://bl.uk/namespaces/blit ./blit_v02.xsd",
                        "xmlns:blit" : "http://bl.uk/namespaces/blit" } )
     
-    image = ET.SubElement(root, "image")
+    image = ET.SubElement(root, "blit:image")
     image.set("offset", "0")
     
     dim = ET.SubElement(image, "blit:dimension")
