@@ -60,7 +60,8 @@ class RunJpylyzer(luigi.contrib.hadoop.JobTask):
     input_file = luigi.Parameter()
 
     def output(self):
-        return luigi.contrib.hdfs.HdfsTarget("blitter/jpylyzer.tsv", format=luigi.contrib.hdfs.PlainDir)
+        out_name = "%s-jpylyzer.tsv" % os.path.splitext(self.input_file)[0]
+        return luigi.contrib.hdfs.HdfsTarget(out_name, format=luigi.contrib.hdfs.PlainDir)
 
     def requires(self):
         return ExternalListFile(self.input_file)
@@ -143,9 +144,9 @@ class GenerateBlit(luigi.contrib.hadoop.JobTask):
     def requires(self):
         return RunJpylyzer(self.input_file)
 
-    # FIXME use os.dirname to generate output filename from input filename (also above too)
     def output(self):
-        return luigi.contrib.hdfs.HdfsTarget("blitter/blit.tsv", format=luigi.contrib.hdfs.PlainDir)
+        out_name = "%s-blit.tsv" % os.path.splitext(self.input_file)[0]
+        return luigi.contrib.hdfs.HdfsTarget(out_name, format=luigi.contrib.hdfs.PlainDir)
 
     def extra_modules(self):
         return [jpylyzer,genblit]
@@ -212,8 +213,8 @@ class GenerateBlitZip(luigi.Task):
         return GenerateBlit(self.input_file)
 
     def output(self):
-        
-        return luigi.LocalTarget("%s.zip" % self.input_file)
+        zip_name = "%s.zip" % os.path.splitext(self.input_file)[0]
+        return luigi.LocalTarget(zip_name)
 
     def run(self):
         with zipfile.ZipFile(self.output().path, 'w',
@@ -221,6 +222,7 @@ class GenerateBlitZip(luigi.Task):
             with self.input().open('r') as in_file:
                 for line in in_file:
                     ark, xmlstr = line.strip().split("\t",1)
+                    # Write each XML string to a file in the ZIP using a filename based on the ARK:
                     ark_id = ark.replace("ark:/81055/","")
                     out_file.writestr("%s.xml" % ark_id, xmlstr)
 
