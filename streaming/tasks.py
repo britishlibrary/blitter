@@ -83,7 +83,7 @@ class RunJpylyzer(luigi.contrib.hadoop.JobTask):
         """
 
         # Ignore blank lines:
-        if line == '':
+        if line == '' or line =='ContentFileUID':
             return
 
         try:
@@ -213,7 +213,8 @@ class GenerateBlitZip(luigi.Task):
         return GenerateBlit(self.input_file)
 
     def output(self):
-        zip_name = "%s.zip" % os.path.splitext(self.input_file)[0]
+        basename = os.path.basename(self.input_file)
+        zip_name = "%s.zip" % os.path.splitext(basename)[0]
         return luigi.LocalTarget(zip_name)
 
     def run(self):
@@ -228,4 +229,5 @@ class GenerateBlitZip(luigi.Task):
 
 
 if __name__ == '__main__':
-    luigi.run(['GenerateBlitZip', '--input-file', 'test-input.txt', '--local-scheduler'])
+    #luigi.run(['GenerateBlitZip', '--input-file', 'test-input.txt', '--local-scheduler'])
+    luigi.run(['GenerateBlitZip', '--input-file', '/blit/Google_DArks_test.csv', '--local-scheduler'])
