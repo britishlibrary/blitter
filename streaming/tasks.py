@@ -59,7 +59,14 @@ class RunJpylyzer(luigi.contrib.hadoop.JobTask):
     """
     input_file = luigi.Parameter()
 
+    # Override the default number of reducers (25)
+    n_reduce_tasks = 50
+
     def jobconfs(self):
+        '''
+        This patched the job configuration to ensure the output gets stored compressed.
+        :return:
+        '''
         jcs = super(RunJpylyzer, self).jobconfs()
         jcs.append('mapred.output.compress=true')
         jcs.append('mapred.output.compression.codec=org.apache.hadoop.io.compress.GzipCodec')
