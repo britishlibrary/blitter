@@ -284,9 +284,34 @@ def fileToMemoryMap(file):
         fileData = ""
     
     f.close()    
-    return(fileData)  
+    return(fileData)
 
 def checkOneFile(file):
+    try:
+        fileData = fileToMemoryMap(file)
+    except:
+        fileData = readFileBytes(file)
+
+    # File name and path
+    fileName = os.path.basename(file)
+    filePath = os.path.abspath(file)
+
+    fileSizeInBytes = os.path.getsize(file)
+    try:
+        lastModifiedDate = time.ctime(os.path.getmtime(file))
+    except ValueError:
+        # Dates earlier than 1 Jan 1970 can raise ValueError on Windows
+        # Workaround: replace by lowest possible value (typically 1 Jan 1970)
+        lastModifiedDate = time.ctime(0)
+
+    root = checkOneFileData(fileName, filePath, fileSizeInBytes, lastModifiedDate, fileData)
+
+    if fileData != "" and type(fileData) != str:
+        fileData.close()
+
+    return(root)
+
+def checkOneFileData(fileName, filePath, fileSizeInBytes, fileLastModifiedDate, fileData):
     # Process one file and return analysis result as element object
 
     # Create output elementtree object
@@ -306,10 +331,6 @@ def checkOneFile(file):
     fileInfo = ET.Element('fileInfo')
     statusInfo = ET.Element('statusInfo')
 
-    # File name and path 
-    fileName = os.path.basename(file)
-    filePath = os.path.abspath(file)
-
     # If file name / path contain any surrogate pairs, remove them to
     # avoid problems when writing to XML
     fileNameCleaned = stripSurrogatePairs(fileName)
@@ -322,30 +343,17 @@ def checkOneFile(file):
     fileInfo.appendChildTagWithText("fileName", fileNameCleaned)
     fileInfo.appendChildTagWithText("filePath", filePathCleaned)
     fileInfo.appendChildTagWithText(
-        "fileSizeInBytes", str(os.path.getsize(file)))
-    try:
-        lastModifiedDate = time.ctime(os.path.getmtime(file))
-    except ValueError:
-        # Dates earlier than 1 Jan 1970 can raise ValueError on Windows
-        # Workaround: replace by lowest possible value (typically 1 Jan 1970)
-        lastModifiedDate = time.ctime(0)
+        "fileSizeInBytes", str(fileSizeInBytes))
     fileInfo.appendChildTagWithText(
-        "fileLastModified", lastModifiedDate)
+        "fileLastModified", fileLastModifiedDate)
 
     # Initialise success flag
     success = True
     
     try:
         # Contents of file to memory map object
-        try:
-          fileData = fileToMemoryMap(file)
-        except:
-          fileData = readFileBytes(file)
         isValidJP2, tests, characteristics = BoxValidator("JP2", fileData).validate()
         
-        if fileData != "" and type(fileData) != str:
-            fileData.close()
-
         # Generate property values remap table
         remapTable = generatePropertiesRemapTable()
 
