@@ -33,7 +33,10 @@ def to_blit(jpylyzer_xml):
     last (N_L - 1) level.
     '''
 
-    ns = {'jpy': "http://openpreservation.org/ns/jpylyzer/"}
+    ns = {
+        'jpy': "http://openpreservation.org/ns/jpylyzer/",
+        'tiff': "http://ns.adobe.com/tiff/1.0/"
+    }
 
     prop = jpylyzer_xml.find('jpy:properties', ns)
     
@@ -69,10 +72,16 @@ def to_blit(jpylyzer_xml):
         resh.text = prop.find('jpy:jp2HeaderBox/jpy:resolutionBox/jpy:captureResolutionBox/jpy:vRescInPixelsPerInch',
                       ns).text
     except:
-        resv.text = prop.find('jpy:jp2HeaderBox/jpy:resolutionBox/jpy:displayResolutionBox/jpy:hResdInPixelsPerInch',
+        try:
+            resv.text = prop.find('jpy:jp2HeaderBox/jpy:resolutionBox/jpy:displayResolutionBox/jpy:hResdInPixelsPerInch',
                       ns).text
-        resh.text = prop.find('jpy:jp2HeaderBox/jpy:resolutionBox/jpy:displayResolutionBox/jpy:vResdInPixelsPerInch',
+            resh.text = prop.find('jpy:jp2HeaderBox/jpy:resolutionBox/jpy:displayResolutionBox/jpy:vResdInPixelsPerInch',
                       ns).text
+        except:
+            num, denom = prop.find('.//tiff:XResolution', ns).text.split('/')
+            resh.text = str(int(float(num)/float(denom)))
+            num, demon = prop.find('.//tiff:YResolution', ns).text.split('/')
+            resv.text = str(int(float(num)/float(denom)))
 
     chan = ET.SubElement(image, "blit:channels")
     chan.text = prop.find('jpy:jp2HeaderBox/jpy:imageHeaderBox/jpy:nC', ns).text
