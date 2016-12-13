@@ -59,6 +59,12 @@ class RunJpylyzer(luigi.contrib.hadoop.JobTask):
     """
     input_file = luigi.Parameter()
 
+    def jobconfs(self):
+        jcs = super(RunJpylyzer, self).jobconfs()
+        jcs.append('mapred.output.compress=true')
+        jcs.append('mapred.output.compression.codec=org.apache.hadoop.io.compress.GzipCodec')
+        return jcs
+
     def output(self):
         out_name = "%s-jpylyzer.tsv" % os.path.splitext(self.input_file)[0]
         return luigi.contrib.hdfs.HdfsTarget(out_name, format=luigi.contrib.hdfs.PlainDir)
@@ -101,11 +107,16 @@ class RunJpylyzer(luigi.contrib.hadoop.JobTask):
             else:
                 proxies = None
             data = urllib.urlopen(download_url, proxies=proxies).read()
-            with open(jp2_file,"wb") as f:
-                f.write(data)
 
-            # Jpylyser-it:
-            jpylyzer_xml = jpylyzer.checkOneFile(jp2_file)
+            # Jpylyzer-it:
+
+            # Use a temp file:
+            #with open(jp2_file,"wb") as f:
+            #    f.write(data)
+            #jpylyzer_xml = jpylyzer.checkOneFile(jp2_file)
+
+            # Jpylyze it in memory:
+            jpylyzer_xml = jpylyzer.checkOneFileData(id, "", len(data), "", data)
 
             # Map to a string, and strip out newlines:
             jpylyzer_xml_out = ET.tostring(jpylyzer_xml, 'UTF-8', 'xml')
@@ -114,8 +125,8 @@ class RunJpylyzer(luigi.contrib.hadoop.JobTask):
             # Delete the temp file:
             os.remove(jp2_file)
         except Exception as e:
-            jpylyzer_xml_out = "FAILED! %s" % e
-            raise(e)
+            yield "FAIL %s" % line, "Error: %s" % e
+            return
 
         # And return:
         yield line, jpylyzer_xml_out
@@ -182,8 +193,8 @@ class GenerateBlit(luigi.contrib.hadoop.JobTask):
             blit_xml_out = blit_xml_out.replace('\n', ' ').replace('\r', '')
 
         except Exception as e:
-            id = line
-            blit_xml_out = "FAILED! %s" % e
+            id = "FAIL with: %s" % e
+            blit_xml_out = line
 
         # And return both forms:
         yield id, blit_xml_out
