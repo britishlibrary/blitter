@@ -286,7 +286,10 @@ def fileToMemoryMap(file):
     f.close()    
     return(fileData)
 
+
 def checkOneFile(file):
+    # Process one file and return analysis result as element object
+
     try:
         fileData = fileToMemoryMap(file)
     except:
@@ -311,8 +314,9 @@ def checkOneFile(file):
 
     return(root)
 
+
 def checkOneFileData(fileName, filePath, fileSizeInBytes, fileLastModifiedDate, fileData):
-    # Process one file and return analysis result as element object
+    # Process the data from one file and return analysis result as element object
 
     # Create output elementtree object
 
