@@ -206,7 +206,7 @@ class GenerateBlit(luigi.contrib.hadoop.JobTask):
 
         # Ignore upstream failure:
         if line.startswith("FAIL "):
-            return
+            return "FAIL upstream failure", line
 
         try:
             # Split the input:
@@ -228,7 +228,7 @@ class GenerateBlit(luigi.contrib.hadoop.JobTask):
             blit_xml_out = line
 
         # And return both forms:
-        yield id, blit_xml_out
+        return id, blit_xml_out
 
     def reducer(self, key, values):
         """
