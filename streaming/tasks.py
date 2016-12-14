@@ -115,6 +115,7 @@ class RunJpylyzer(luigi.contrib.hadoop.JobTask):
 
             # Download and analyse the JP2.
             try:
+
                 # Construct URL to attempt to download:
                 id = line.replace("ark:/81055/","")
                 download_url = blit().url_template % id
@@ -143,6 +144,7 @@ class RunJpylyzer(luigi.contrib.hadoop.JobTask):
                 jpylyzer_xml = jpylyzer.checkOneFileData(id, "", len(data), "", data)
 
                 # Map to a string, and strip out newlines:
+                out_key = line
                 jpylyzer_xml_out = ET.tostring(jpylyzer_xml, 'UTF-8', 'xml')
                 jpylyzer_xml_out = jpylyzer_xml_out.replace('\n', ' ').replace('\r', '')
 
