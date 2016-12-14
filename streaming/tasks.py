@@ -100,18 +100,19 @@ class RunJpylyzer(luigi.contrib.hadoop.JobTask):
         if line == '' or line =='ContentFileUID':
             return
 
+        logger.info("Processing line %s " % line)
+
         out_key = line
         jpylyzer_xml_out = ""
         retries = 0
-        while retries < 3:
+        succeeded = False
+        while not succeeded and retries < 3:
+            # Sleep if this is a retry:
             if retries > 0:
-                logger.info("Sleeping for 30 seconds before retrying...")
+                logger.warning("Sleeping for 30 seconds before retrying...")
                 time.sleep(30)
             # Download and analyse the JP2.
             try:
-                # Create to temp file:
-                (jp2_fd, jp2_file) = tempfile.mkstemp()
-
                 # Construct URL and download:
                 id = line.replace("ark:/81055/","")
                 download_url = blit().url_template % id
@@ -125,27 +126,21 @@ class RunJpylyzer(luigi.contrib.hadoop.JobTask):
 
                 data = urllib.urlopen(download_url, proxies=proxies).read()
 
-                # Jpylyzer-it:
-
-                # Use a temp file:
-                #with open(jp2_file,"wb") as f:
-                #    f.write(data)
-                #jpylyzer_xml = jpylyzer.checkOneFile(jp2_file)
-
-                # Jpylyze it in memory:
+                # Jpylyzer-it, in memory:
                 jpylyzer_xml = jpylyzer.checkOneFileData(id, "", len(data), "", data)
 
                 # Map to a string, and strip out newlines:
                 jpylyzer_xml_out = ET.tostring(jpylyzer_xml, 'UTF-8', 'xml')
                 jpylyzer_xml_out = jpylyzer_xml_out.replace('\n', ' ').replace('\r', '')
 
-                # Delete the temp file:
-                #os.remove(jp2_file)
+                # Register success:
+                succeeded = True
+
             except Exception as e:
                 retries += 1
                 out_key = "FAIL %i %s" % (retries, line)
                 jpylyzer_xml_out = "Error: %s" % e
-                logger.warning("Attempt %i failed with %s" % (retries, line))
+                logger.warning("Attempt %i failed with %s" % (retries, e))
 
         # And return:
         yield out_key, jpylyzer_xml_out
