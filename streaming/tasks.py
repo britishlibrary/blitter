@@ -1,4 +1,5 @@
 import os
+import time
 import luigi
 import luigi.contrib.hdfs
 import luigi.contrib.hadoop
@@ -99,44 +100,55 @@ class RunJpylyzer(luigi.contrib.hadoop.JobTask):
         if line == '' or line =='ContentFileUID':
             return
 
-        try:
-            # Create to temp file:
-            (jp2_fd, jp2_file) = tempfile.mkstemp()
+        out_key = line
+        jpylyzer_xml_out = ""
+        retries = 0
+        while retries < 3:
+            if retries > 0:
+                logger.info("Sleeping for 30 seconds before retrying...")
+                time.sleep(30)
+            # Download and analyse the JP2.
+            try:
+                # Create to temp file:
+                (jp2_fd, jp2_file) = tempfile.mkstemp()
 
-            # Construct URL and download:
-            id = line.replace("ark:/81055/","")
-            download_url = blit().url_template % id
-            logger.warning("Downloading: %s " % download_url)
-            # Download via proxy, currently hard-coded and in-memory:
-            if blit().http_proxy:
-                logger.warning("Using proxy: %s" % blit().http_proxy)
-                proxies = {'http': blit().http_proxy, 'https': blit().http_proxy}
-            else:
-                proxies = None
-            data = urllib.urlopen(download_url, proxies=proxies).read()
+                # Construct URL and download:
+                id = line.replace("ark:/81055/","")
+                download_url = blit().url_template % id
+                logger.warning("Downloading: %s " % download_url)
+                # Download via proxy, currently hard-coded and in-memory:
+                if blit().http_proxy:
+                     logger.warning("Using proxy: %s" % blit().http_proxy)
+                     proxies = {'http': blit().http_proxy, 'https': blit().http_proxy}
+                else:
+                    proxies = None
 
-            # Jpylyzer-it:
+                data = urllib.urlopen(download_url, proxies=proxies).read()
 
-            # Use a temp file:
-            #with open(jp2_file,"wb") as f:
-            #    f.write(data)
-            #jpylyzer_xml = jpylyzer.checkOneFile(jp2_file)
+                # Jpylyzer-it:
 
-            # Jpylyze it in memory:
-            jpylyzer_xml = jpylyzer.checkOneFileData(id, "", len(data), "", data)
+                # Use a temp file:
+                #with open(jp2_file,"wb") as f:
+                #    f.write(data)
+                #jpylyzer_xml = jpylyzer.checkOneFile(jp2_file)
 
-            # Map to a string, and strip out newlines:
-            jpylyzer_xml_out = ET.tostring(jpylyzer_xml, 'UTF-8', 'xml')
-            jpylyzer_xml_out = jpylyzer_xml_out.replace('\n', ' ').replace('\r', '')
+                # Jpylyze it in memory:
+                jpylyzer_xml = jpylyzer.checkOneFileData(id, "", len(data), "", data)
 
-            # Delete the temp file:
-            os.remove(jp2_file)
-        except Exception as e:
-            yield "FAIL %s" % line, "Error: %s" % e
-            return
+                # Map to a string, and strip out newlines:
+                jpylyzer_xml_out = ET.tostring(jpylyzer_xml, 'UTF-8', 'xml')
+                jpylyzer_xml_out = jpylyzer_xml_out.replace('\n', ' ').replace('\r', '')
+
+                # Delete the temp file:
+                #os.remove(jp2_file)
+            except Exception as e:
+                retries += 1
+                out_key = "FAIL %i %s" % (retries, line)
+                jpylyzer_xml_out = "Error: %s" % e
+                logger.warning("Attempt %i failed with %s" % (retries, line))
 
         # And return:
-        yield line, jpylyzer_xml_out
+        yield out_key, jpylyzer_xml_out
 
     def reducer(self, key, values):
         """
@@ -182,6 +194,10 @@ class GenerateBlit(luigi.contrib.hadoop.JobTask):
 
         # Ignore blank lines:
         if line == '':
+            return
+
+        # Ignore upstream failure:
+        if line.startswith("FAIL "):
             return
 
         try:
