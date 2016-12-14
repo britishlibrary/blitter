@@ -156,7 +156,7 @@ class RunJpylyzer(luigi.contrib.hadoop.JobTask):
                 logger.warning("Attempt %i failed with %s" % (retries, e))
 
         # And return:
-        yield out_key, jpylyzer_xml_out
+        return out_key, jpylyzer_xml_out
 
     def reducer(self, key, values):
         """
