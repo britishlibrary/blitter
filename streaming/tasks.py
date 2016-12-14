@@ -73,7 +73,7 @@ class RunJpylyzer(luigi.contrib.hadoop.JobTask):
         return jcs
 
     def output(self):
-        out_name = "%s-jpylyzer.tsv" % os.path.splitext(self.input_file)[0]
+        out_name = "%s.jpylyzer.tsv" % self.input_file
         return luigi.contrib.hdfs.HdfsTarget(out_name, format=luigi.contrib.hdfs.PlainDir)
 
     def requires(self):
@@ -163,7 +163,7 @@ class GenerateBlit(luigi.contrib.hadoop.JobTask):
         return RunJpylyzer(self.input_file)
 
     def output(self):
-        out_name = "%s-blit.tsv" % os.path.splitext(self.input_file)[0]
+        out_name = "%s.blit.tsv" % self.input_file
         return luigi.contrib.hdfs.HdfsTarget(out_name, format=luigi.contrib.hdfs.PlainDir)
 
     def extra_modules(self):
@@ -232,7 +232,7 @@ class GenerateBlitZip(luigi.Task):
 
     def output(self):
         basename = os.path.basename(self.input_file)
-        zip_name = "%s.zip" % os.path.splitext(basename)[0]
+        zip_name = "%s.blit.zip" % basename
         return luigi.LocalTarget(zip_name)
 
     def run(self):
