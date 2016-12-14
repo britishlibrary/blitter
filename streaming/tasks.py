@@ -259,4 +259,6 @@ class GenerateBlitZip(luigi.Task):
 
 if __name__ == '__main__':
     #luigi.run(['GenerateBlitZip', '--input-file', 'test-input.txt', '--local-scheduler'])
-    luigi.run(['GenerateBlitZip', '--input-file', '/blit/Google_DArks_test.csv', '--local-scheduler'])
+    #luigi.run(['GenerateBlitZip', '--input-file', '/blit/Google_DArks_test.csv', '--local-scheduler'])
+    luigi.run(['GenerateBlitZip', '--input-file', '/blit/chunks/Google_DArks_ex_alto.csv.chunk00', '--local-scheduler'])
+
