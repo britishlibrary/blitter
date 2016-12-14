@@ -156,7 +156,7 @@ class RunJpylyzer(luigi.contrib.hadoop.JobTask):
                 logger.warning("Attempt %i failed with %s" % (retries, e))
 
         # And return:
-        return out_key, jpylyzer_xml_out
+        yield out_key, jpylyzer_xml_out
 
     def reducer(self, key, values):
         """
@@ -206,29 +206,32 @@ class GenerateBlit(luigi.contrib.hadoop.JobTask):
 
         # Ignore upstream failure:
         if line.startswith("FAIL "):
-            return "FAIL upstream failure", line
+            lid = line
+            blit_xml_out = "Upstream failure"
 
-        try:
-            # Split the input:
-            id, jpylyzer_xml_out = line.strip().split("\t",1)
+        else:
+            # Attempt to parse and transform:
+            try:
+                # Split the input:
+                lid, jpylyzer_xml_out = line.strip().split("\t",1)
 
-            # Re-parse the XML:
-            ET.register_namespace("", "http://openpreservation.org/ns/jpylyzer/")
-            jpylyzer_xml = ET.fromstring(jpylyzer_xml_out)
+                # Re-parse the XML:
+                ET.register_namespace("", "http://openpreservation.org/ns/jpylyzer/")
+                jpylyzer_xml = ET.fromstring(jpylyzer_xml_out)
 
-            # Convert to blit xml:
-            blit_xml = genblit.to_blit(jpylyzer_xml)
+                # Convert to blit xml:
+                blit_xml = genblit.to_blit(jpylyzer_xml)
 
-            # Map to a string, and strip out newlines:
-            blit_xml_out = ET.tostring(blit_xml, 'UTF-8', 'xml')
-            blit_xml_out = blit_xml_out.replace('\n', ' ').replace('\r', '')
+                # Map to a string, and strip out newlines:
+                blit_xml_out = ET.tostring(blit_xml, 'UTF-8', 'xml')
+                blit_xml_out = blit_xml_out.replace('\n', ' ').replace('\r', '')
 
-        except Exception as e:
-            id = "FAIL with: %s" % e
-            blit_xml_out = line
+            except Exception as e:
+                lid = "FAIL with: %s" % e
+                blit_xml_out = line
 
-        # And return both forms:
-        return id, blit_xml_out
+        # And return:
+        yield lid, blit_xml_out
 
     def reducer(self, key, values):
         """
