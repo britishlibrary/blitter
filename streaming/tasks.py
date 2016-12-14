@@ -107,7 +107,7 @@ class RunJpylyzer(luigi.contrib.hadoop.JobTask):
         jpylyzer_xml_out = ""
         retries = 0
         succeeded = False
-        while not succeeded and retries < 3:
+        while not succeeded and retries < 5:
             # Sleep if this is a retry:
             if retries > 0:
                 logger.warning("Sleeping for %i seconds before retrying..." % self.retry_delay)
@@ -115,10 +115,13 @@ class RunJpylyzer(luigi.contrib.hadoop.JobTask):
 
             # Download and analyse the JP2.
             try:
-                # Construct URL and download:
+                # Construct URL to attempt to download:
                 id = line.replace("ark:/81055/","")
                 download_url = blit().url_template % id
+
+                # Let the user know which item we're processing...
                 logger.warning("Downloading: %s " % download_url)
+
                 # Download via proxy, currently hard-coded and in-memory:
                 if blit().http_proxy:
                      logger.warning("Using proxy: %s" % blit().http_proxy)
@@ -126,7 +129,15 @@ class RunJpylyzer(luigi.contrib.hadoop.JobTask):
                 else:
                     proxies = None
 
-                data = urllib.urlopen(download_url, proxies=proxies).read()
+                # Open the connection:
+                conn = urllib.urlopen(download_url, proxies=proxies)
+
+                # Throw an exception if the download failed:
+                if conn.getcode() != 200:
+                    raise Exception("Download failed! Status code: %i" % conn.getcode())
+
+                # Otherwise, proceed to read the data and analyse it:
+                data = conn.read()
 
                 # Jpylyzer-it, in memory:
                 jpylyzer_xml = jpylyzer.checkOneFileData(id, "", len(data), "", data)
