@@ -59,6 +59,7 @@ class RunJpylyzer(luigi.contrib.hadoop.JobTask):
         input_file: The file (on HDFS) that contains the list of identifiers.
     """
     input_file = luigi.Parameter()
+    retry_delay = luigi.IntParameter(default=60)
 
     # Override the default number of reducers (25)
     n_reduce_tasks = 50
@@ -109,8 +110,9 @@ class RunJpylyzer(luigi.contrib.hadoop.JobTask):
         while not succeeded and retries < 3:
             # Sleep if this is a retry:
             if retries > 0:
-                logger.warning("Sleeping for 30 seconds before retrying...")
-                time.sleep(30)
+                logger.warning("Sleeping for %i seconds before retrying..." % self.retry_delay)
+                time.sleep(self.retry_delay)
+
             # Download and analyse the JP2.
             try:
                 # Construct URL and download:
@@ -247,14 +249,23 @@ class GenerateBlitZip(luigi.Task):
         return luigi.LocalTarget(zip_name)
 
     def run(self):
-        with zipfile.ZipFile(self.output().path, 'w',
+        error_log = "%s.blit.error.log" % os.path.basename(self.input_file)
+        error_count = 0
+        with open(error_log,"w") as err:
+            with zipfile.ZipFile(self.output().path, 'w',
                              compression=zipfile.ZIP_DEFLATED, allowZip64=False) as out_file:
-            with self.input().open('r') as in_file:
-                for line in in_file:
-                    ark, xmlstr = line.strip().split("\t",1)
-                    # Write each XML string to a file in the ZIP using a filename based on the ARK:
-                    ark_id = ark.replace("ark:/81055/","")
-                    out_file.writestr("%s.xml" % ark_id, xmlstr)
+                with self.input().open('r') as in_file:
+                    for line in in_file:
+                        if line.startswith("FAIL "):
+                            err.write(line)
+                            error_count += 1
+                        else:
+                            ark, xmlstr = line.strip().split("\t",1)
+                            # Write each XML string to a file in the ZIP using a filename based on the ARK:
+                            ark_id = ark.replace("ark:/81055/","")
+                            out_file.writestr("%s.xml" % ark_id, xmlstr)
+        if error_count > 0:
+            logger.warning("Logged %i errors to '%s'" % (error_count, error_log))
 
 
 if __name__ == '__main__':
