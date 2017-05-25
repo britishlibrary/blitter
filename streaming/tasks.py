@@ -59,10 +59,13 @@ class RunJpylyzer(luigi.contrib.hadoop.JobTask):
         input_file: The file (on HDFS) that contains the list of identifiers.
     """
     input_file = luigi.Parameter()
-    retry_delay = luigi.IntParameter(default=60)
+    retry_delay = luigi.IntParameter(default=90)
 
     # Override the default number of reducers (25)
     n_reduce_tasks = 50
+
+    # Maximum number of time to attempt retries:
+    MAX_RETRIES = 10
 
     def jobconfs(self):
         '''
@@ -98,7 +101,7 @@ class RunJpylyzer(luigi.contrib.hadoop.JobTask):
         """
 
         # Ignore blank lines:
-        if line == '' or line =='EntityUID':
+        if line == '' or 'EntityUID' in line or 'ContentID' in line:
             return
 
         logger.info("Processing line %s " % line)
@@ -108,7 +111,7 @@ class RunJpylyzer(luigi.contrib.hadoop.JobTask):
         retries = 0
         lark, dark = line.strip().split(",", 1)
         succeeded = False
-        while not succeeded and retries < 5:
+        while not succeeded and retries < self.MAX_RETRIES:
             # Sleep if this is a retry:
             if retries > 0:
                 logger.warning("Sleeping for %i seconds before retrying..." % self.retry_delay)
@@ -145,7 +148,7 @@ class RunJpylyzer(luigi.contrib.hadoop.JobTask):
                 jpylyzer_xml = jpylyzer.checkOneFileData(id, "", len(data), "", data)
 
                 # Map to a string, and strip out newlines:
-                out_key = line
+                out_key = "%s\t%s" % (lark, dark)
                 jpylyzer_xml_out = ET.tostring(jpylyzer_xml, 'UTF-8', 'xml')
                 jpylyzer_xml_out = jpylyzer_xml_out.replace('\n', ' ').replace('\r', '')
 
