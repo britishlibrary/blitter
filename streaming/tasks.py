@@ -106,7 +106,7 @@ class RunJpylyzer(luigi.contrib.hadoop.JobTask):
         out_key = line
         jpylyzer_xml_out = ""
         retries = 0
-        lark, dark = line.strip().split("\t", 1)
+        lark, dark = line.strip().split(",", 1)
         succeeded = False
         while not succeeded and retries < 5:
             # Sleep if this is a retry:
