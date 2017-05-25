@@ -106,6 +106,7 @@ class RunJpylyzer(luigi.contrib.hadoop.JobTask):
         out_key = line
         jpylyzer_xml_out = ""
         retries = 0
+        lark, dark = line.strip().split("\t", 1)
         succeeded = False
         while not succeeded and retries < 5:
             # Sleep if this is a retry:
@@ -117,7 +118,7 @@ class RunJpylyzer(luigi.contrib.hadoop.JobTask):
             try:
 
                 # Construct URL to attempt to download:
-                id = line.replace("ark:/81055/","")
+                id = dark.replace("ark:/81055/","")
                 download_url = blit().url_template % id
 
                 # Let the user know which item we're processing...
@@ -215,7 +216,8 @@ class GenerateBlit(luigi.contrib.hadoop.JobTask):
             # Attempt to parse and transform:
             try:
                 # Split the input:
-                lid, jpylyzer_xml_out = line.strip().split("\t",1)
+                lark, dark, jpylyzer_xml_out = line.strip().split("\t",2)
+                lid = "%s\t%s" % (lark, dark)
 
                 # Re-parse the XML:
                 ET.register_namespace("", "http://openpreservation.org/ns/jpylyzer/")
@@ -276,16 +278,17 @@ class GenerateBlitZip(luigi.Task):
                             err.write(line)
                             error_count += 1
                         else:
-                            ark, xmlstr = line.strip().split("\t",1)
+                            lark, dark, xmlstr = line.strip().split("\t",2)
                             # Write each XML string to a file in the ZIP using a filename based on the ARK:
-                            ark_id = ark.replace("ark:/81055/","")
-                            out_file.writestr("%s.xml" % ark_id, xmlstr)
+                            lark_id = lark.replace("ark:/81055/","")
+                            dark_id = dark.replace("ark:/81055/", "")
+                            out_file.writestr("%s/%s.xml" % (lark_id, dark_id), xmlstr)
         if error_count > 0:
             logger.warning("Logged %i errors to '%s'" % (error_count, error_log))
 
 
 if __name__ == '__main__':
-    #luigi.run(['GenerateBlitZip', '--input-file', 'test-input.txt', '--local-scheduler'])
+    luigi.run(['GenerateBlitZip', '--input-file', 'test-input.txt', '--local-scheduler'])
     #luigi.run(['GenerateBlitZip', '--input-file', '/blit/Google_DArks_test.csv', '--local-scheduler'])
-    luigi.run(['GenerateBlitZip', '--input-file', '/blit/chunks/Google_DArks_ex_alto.csv.chunk00', '--local-scheduler'])
+    #luigi.run(['GenerateBlitZip', '--input-file', '/blit/chunks/Google_DArks_ex_alto.csv.chunk00', '--local-scheduler'])
 
