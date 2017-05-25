@@ -98,7 +98,7 @@ class RunJpylyzer(luigi.contrib.hadoop.JobTask):
         """
 
         # Ignore blank lines:
-        if line == '' or line =='ContentFileUID':
+        if line == '' or line =='EntityUID':
             return
 
         logger.info("Processing line %s " % line)
