@@ -265,11 +265,13 @@ class GenerateJpylyzerStats(luigi.contrib.hadoop.JobTask):
             yield "BY-WIDTH-RANGE\t%s" % self.power_two(int(j2.width)), 1
             yield "BY-HEIGHT-RANGE\t%s" % self.power_two(int(j2.height)), 1
             yield "BY-FILESIZE-RANGE\t%s" % self.power_two(int(j2.filesize)), 1
-            yield "BY-COMPRESSION-RATIO-RANGE\t%s" % self.power_two(float(j2.compression_ratio)), 1
+            yield "BY-COMPRESSION-RATIO-RANGE\t%s" % self.power_two(int(math.floor(float(j2.compression_ratio)))), 1
 
     def power_two(self,n):
-        lo = 2**(math.floor(math.log(n, 2)))
-        hi = 2**(math.ceil(math.log(n, 2)))
+        #lo = 2**(math.floor(math.log(n, 2)))
+        #hi = 2**(math.ceil(math.log(n, 2)))
+        lo = 1<<((n-1).bit_length()-1)
+        hi = 1<<(n-1).bit_length()
         return "%i-%i" % (lo, hi)
 
     def reducer(self, key, values):
