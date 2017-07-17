@@ -178,6 +178,83 @@ class RunJpylyzer(luigi.contrib.hadoop.JobTask):
         #yield key, sum(values)
 
 
+class GenerateJpylyzerStats(luigi.contrib.hadoop.JobTask):
+    """
+    This class takes the output from Jpylyzer and summary stats
+
+    """
+    input_file = luigi.Parameter()
+
+    def requires(self):
+        return RunJpylyzer(self.input_file)
+
+    def output(self):
+        out_name = "%s.stats.tsv" % self.input_file
+        return luigi.contrib.hdfs.HdfsTarget(out_name, format=luigi.contrib.hdfs.PlainDir)
+
+    def extra_modules(self):
+        return [jpylyzer,genblit]
+
+    def mapper(self, line):
+        """
+        Each line should be an identifier of a JP2 file, e.g. 'vdc_100022551931.0x000001' followed by a string
+        that is the XML output from Jpylyzer.
+
+        In the mapper we re-parse, then convert to blit for output.
+
+        :param line:
+        :return:
+        """
+
+        # Ignore blank lines:
+        if line == '':
+            return
+
+        # Ignore upstream failure:
+        if line.startswith("FAIL "):
+            lid = line
+            out = "Upstream failure"
+
+        else:
+            # Attempt to parse and transform:
+            try:
+                # Split the input:
+                lark, dark, jpylyzer_xml_out = line.strip().split("\t",2)
+                lid = "%s\t%s" % (lark, dark)
+
+                # Re-parse the XML:
+                ET.register_namespace("", "http://openpreservation.org/ns/jpylyzer/")
+                jpylyzer_xml = ET.fromstring(jpylyzer_xml_out)
+
+                # Convert to blit xml:
+                blit_xml = genblit.to_blit(jpylyzer_xml)
+
+                # Map to a string, and strip out newlines:
+                blit_xml_out = ET.tostring(blit_xml, 'UTF-8', 'xml')
+                blit_xml_out = blit_xml_out.replace('\n', ' ').replace('\r', '')
+
+            except Exception as e:
+                lid = "FAIL with: %s" % e
+                out = line
+
+        # And return:
+        yield lid, out
+
+    def reducer(self, key, values):
+        """
+        A pass-through reducer.
+
+        :param key:
+        :param values:
+        :return:
+        """
+
+        for value in values:
+            yield key, value
+        # An actual reducer:
+        #yield key, sum(values)
+
+
 class GenerateBlit(luigi.contrib.hadoop.JobTask):
     """
     This class takes the output from Jpylyzer and transforms it into 'blit' XML.
