@@ -10,7 +10,7 @@ import logging
 import xml.etree.ElementTree as ET
 
 import jpylyzer.jpylyzer # Imported from https://github.com/britishlibrary/jpylyzer
-import blitter.genblit as genblit
+import blitter.genblit
 
 logger = logging.getLogger('luigi-interface')
 
@@ -93,7 +93,7 @@ class RunJpylyzer(luigi.contrib.hadoop.JobTask):
         return ExternalListFile(self.input_file, self.use_local_files)
 
     def extra_modules(self):
-        return [jpylyzer,genblit]
+        return [jpylyzer,blitter]
 
     def extra_files(self):
         return ["luigi.cfg"]
@@ -205,7 +205,7 @@ class GenerateJpylyzerStats(luigi.contrib.hadoop.JobTask):
             return luigi.contrib.hdfs.HdfsTarget(out_name, format=luigi.contrib.hdfs.PlainDir)
 
     def extra_modules(self):
-        return [genblit]
+        return [blitter]
 
     def mapper(self, line):
         """
@@ -232,7 +232,7 @@ class GenerateJpylyzerStats(luigi.contrib.hadoop.JobTask):
             lark, dark, jpylyzer_xml_out = line.strip().split("\t",2)
 
             # Convert to summary form:
-            j2 = genblit.to_summary(jpylyzer_xml_out)
+            j2 = blitter.genblit.to_summary(jpylyzer_xml_out)
 
             # Yield useful bits to count up:
             yield "TOTAL", 1
@@ -301,7 +301,7 @@ class GenerateBlit(luigi.contrib.hadoop.JobTask):
         return luigi.contrib.hdfs.HdfsTarget(out_name, format=luigi.contrib.hdfs.PlainDir)
 
     def extra_modules(self):
-        return [jpylyzer,genblit]
+        return [jpylyzer,blitter]
 
     def mapper(self, line):
         """
@@ -335,7 +335,7 @@ class GenerateBlit(luigi.contrib.hadoop.JobTask):
                 jpylyzer_xml = ET.fromstring(jpylyzer_xml_out)
 
                 # Convert to blit xml:
-                blit_xml = genblit.to_blit(jpylyzer_xml)
+                blit_xml = blitter.genblit.to_blit(jpylyzer_xml)
 
                 # Map to a string, and strip out newlines:
                 blit_xml_out = ET.tostring(blit_xml, 'UTF-8', 'xml')
