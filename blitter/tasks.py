@@ -224,7 +224,7 @@ class GenerateJpylyzerStats(luigi.contrib.hadoop.JobTask):
 
         # Ignore upstream failure:
         if line.startswith("FAIL "):
-            yield line, "Upstream failure"
+            yield "TOTAL-FAILED", 1
 
         # Attempt to parse and exit:
         else:
@@ -235,7 +235,7 @@ class GenerateJpylyzerStats(luigi.contrib.hadoop.JobTask):
             j2 = blitter.genblit.to_summary(jpylyzer_xml_out)
 
             # Yield useful bits to count up:
-            yield "TOTAL", 1
+            yield "TOTAL-SUCCEEDED", 1
             yield "TOTAL-BYTES", int(j2.filesize)
 
             yield "BY-LARK\t%s" % lark, 1
