@@ -93,7 +93,7 @@ class RunJpylyzer(luigi.contrib.hadoop.JobTask):
         return ExternalListFile(self.input_file, self.use_local_files)
 
     def extra_modules(self):
-        return [jpylyzer,blitter]
+        return [jpylyzer,blitter] # Always needs to include everything that's imported above.
 
     def extra_files(self):
         return ["luigi.cfg"]
@@ -205,7 +205,7 @@ class GenerateJpylyzerStats(luigi.contrib.hadoop.JobTask):
             return luigi.contrib.hdfs.HdfsTarget(out_name, format=luigi.contrib.hdfs.PlainDir)
 
     def extra_modules(self):
-        return [blitter]
+        return [jpylyzer,blitter] # Always needs to include everything that's imported above.
 
     def mapper(self, line):
         """
