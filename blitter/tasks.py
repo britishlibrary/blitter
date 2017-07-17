@@ -271,10 +271,13 @@ class GenerateJpylyzerStats(luigi.contrib.hadoop.JobTask):
             yield "BY-COMPRESSION-RATIO-RANGE\t%s" % self.power_two(int(math.floor(float(j2.compression_ratio)))), 1
 
     def power_two(self,n):
-        lo = 2**(math.floor(math.log(n, 2)))
-        hi = 2**(math.ceil(math.log(n, 2)))
-        #lo = 1<<((n-1).bit_length()-1) (throws an error when the value is zero)
-        #hi = 1<<(n-1).bit_length()
+        if n < 2:
+            return "%i" % n
+        # either below (throws an error when the value is zero)
+        #lo = 2**(math.floor(math.log(n, 2)))
+        #i = 2**(math.ceil(math.log(n, 2)))
+        lo = 1<<((n-1).bit_length()-1)
+        hi = 1<<(n-1).bit_length()
         return "%i-%i" % (lo, hi)
 
     def reducer(self, key, values):
