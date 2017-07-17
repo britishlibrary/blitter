@@ -137,6 +137,11 @@ class JP2Summary:
 
                 # Construct the next levels string:
                 dwt_levels += ",%i" % l
+        else:
+            self.precincts = None
+
+    def __str__(self):
+        return pprint.pformat(self.__dict__)
 
 
 def to_summary(jpylyzer_xml):

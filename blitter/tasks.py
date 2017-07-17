@@ -1,12 +1,12 @@
 import os
 import time
+import math
 import luigi
 import luigi.contrib.hdfs
 import luigi.contrib.hadoop
 import urllib
 import zipfile
 import logging
-import tempfile
 import xml.etree.ElementTree as ET
 
 import jpylyzer.jpylyzer as jpylyzer # Imported from https://github.com/britishlibrary/jpylyzer
@@ -224,47 +224,64 @@ class GenerateJpylyzerStats(luigi.contrib.hadoop.JobTask):
 
         # Ignore upstream failure:
         if line.startswith("FAIL "):
-            lid = line
-            out = "Upstream failure"
+            yield line, "Upstream failure"
 
+        # Attempt to parse and exit:
         else:
-            # Attempt to parse and transform:
-            try:
-                # Split the input:
-                lark, dark, jpylyzer_xml_out = line.strip().split("\t",2)
-                lid = "%s\t%s" % (lark, dark)
+            # Split the input:
+            lark, dark, jpylyzer_xml_out = line.strip().split("\t",2)
 
-                # Re-parse the XML:
-                ET.register_namespace("", "http://openpreservation.org/ns/jpylyzer/")
-                jpylyzer_xml = ET.fromstring(jpylyzer_xml_out)
+            # Convert to summary form:
+            j2 = genblit.to_summary(jpylyzer_xml_out)
 
-                # Convert to blit xml:
-                blit_xml = genblit.to_blit(jpylyzer_xml)
+            # Yield useful bits to count up:
+            yield "TOTAL", 1
+            yield "TOTAL-BYTES", int(j2.filesize)
 
-                # Map to a string, and strip out newlines:
-                blit_xml_out = ET.tostring(blit_xml, 'UTF-8', 'xml')
-                blit_xml_out = blit_xml_out.replace('\n', ' ').replace('\r', '')
+            yield "BY-LARK\t%s" % lark, 1
 
-            except Exception as e:
-                lid = "FAIL with: %s" % e
-                out = line
+            yield "BY-BITS-PER-CHANNEL\t%s" % j2.bitsperchannel, 1
+            yield "BY-CHANNELS\t%s" % j2.channels, 1
+            yield "BY-CODEBLOCK-W\t%s" % j2.codeblock_w, 1
+            yield "BY-CODEBLOCK-H\t%s" % j2.codeblock_h, 1
+            yield "BY-COMPRESSION\t%s" % j2.compression, 1
+            yield "BY-LAYERS\t%s" % j2.layers, 1
+            yield "BY-LEVELS\t%s" % j2.levels, 1
+            yield "BY-PROGRESSION-ORDER\t%s" % j2.progression_order, 1
+            yield "BY-RESOLUTION-H-PPI\t%s" % j2.resolution_h_ppi, 1
+            yield "BY-RESOLUTION-V-PPI\t%s" % j2.resolution_v_ppi, 1
+            yield "BY-RESOLUTION-SOURCE\t%s" % j2.resolution_source, 1
+            yield "BY-DWT-LEVELS\t%s" % j2.tile_dwt_levels, 1
+            yield "BY-TILE-X\t%s" % j2.tile_x, 1
+            yield "BY-TILE-Y\t%s" % j2.tile_y, 1
+            yield "BY-IS-VALID\t%s"% j2.is_valid, 1
+            if j2.precincts:
+                yield "BY-HAS-PRECINCTS\tTrue", 1
+                yield "BY-NUM-PRECINCTS\t%s" % len(j2.precincts), 1
+            else:
+                yield "BY-HAS-PRECINCTS\tFalse", 1
 
-        # And return:
-        yield lid, out
+            # And some range-based histograms:
+            yield "BY-WIDTH-RANGE\t%s" % self.power_two(int(j2.width)), 1
+            yield "BY-HEIGHT-RANGE\t%s" % self.power_two(int(j2.height)), 1
+            yield "BY-FILESIZE-RANGE\t%s" % self.power_two(int(j2.filesize)), 1
+            yield "BY-COMPRESSION-RATIO-RANGE\t%s" % self.power_two(float(j2.compression_ratio)), 1
+
+    def power_two(self,n):
+        lo = 2**(math.floor(math.log(n, 2)))
+        hi = 2**(math.ceil(math.log(n, 2)))
+        return "%i-%i" % (lo, hi)
 
     def reducer(self, key, values):
         """
-        A pass-through reducer.
+        A counting reducer.
 
         :param key:
         :param values:
         :return:
         """
 
-        for value in values:
-            yield key, value
-        # An actual reducer:
-        #yield key, sum(values)
+        yield key, sum(values)
 
 
 class GenerateBlit(luigi.contrib.hadoop.JobTask):
