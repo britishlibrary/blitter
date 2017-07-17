@@ -9,7 +9,7 @@ import zipfile
 import logging
 import xml.etree.ElementTree as ET
 
-import jpylyzer.jpylyzer as jpylyzer # Imported from https://github.com/britishlibrary/jpylyzer
+import jpylyzer.jpylyzer # Imported from https://github.com/britishlibrary/jpylyzer
 import blitter.genblit as genblit
 
 logger = logging.getLogger('luigi-interface')
@@ -153,7 +153,7 @@ class RunJpylyzer(luigi.contrib.hadoop.JobTask):
                 data = conn.read()
 
                 # Jpylyzer-it, in memory:
-                jpylyzer_xml = jpylyzer.checkOneFileData(id, "", len(data), "", data)
+                jpylyzer_xml = jpylyzer.jpylyzer.checkOneFileData(id, "", len(data), "", data)
 
                 # Map to a string, and strip out newlines:
                 out_key = "%s\t%s" % (lark, dark)
@@ -205,7 +205,7 @@ class GenerateJpylyzerStats(luigi.contrib.hadoop.JobTask):
             return luigi.contrib.hdfs.HdfsTarget(out_name, format=luigi.contrib.hdfs.PlainDir)
 
     def extra_modules(self):
-        return []
+        return [genblit]
 
     def mapper(self, line):
         """
@@ -382,7 +382,7 @@ class GenerateBlitZip(luigi.Task):
         error_count = 0
         with open(error_log,"w") as err:
             with zipfile.ZipFile(self.output().path, 'w',
-                             compression=zipfile.ZIP_DEFLATED, allowZip64=False) as out_file:
+                             compression=zipfile.ZIP_DEFLATED, allowZip64=True) as out_file:
                 with self.input().open('r') as in_file:
                     for line in in_file:
                         if line.startswith("FAIL "):
