@@ -195,7 +195,7 @@ class GenerateJpylyzerStats(luigi.contrib.hadoop.JobTask):
     use_local_files = luigi.BoolParameter(default=False)
 
     # Override the default number of reducers (25)
-    n_reduce_tasks = 1
+    n_reduce_tasks = 25
 
     def requires(self):
         return RunJpylyzer(self.input_file, use_local_files=self.use_local_files)
