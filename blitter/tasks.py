@@ -13,6 +13,7 @@ import xml.etree.ElementTree as ET
 import jpylyzer.jpylyzer # Imported from https://github.com/britishlibrary/jpylyzer
 import blitter.genblit
 import pysolr
+import requests, urllib3, chardet, certifi, idna # Needed by pysolr
 
 logger = logging.getLogger('luigi-interface')
 
@@ -317,7 +318,7 @@ class PopulateJpylyzerSolr(luigi.contrib.hadoop.JobTask):
             return luigi.contrib.hdfs.HdfsTarget(out_name, format=luigi.contrib.hdfs.PlainDir)
 
     def extra_modules(self):
-        return [jpylyzer,blitter,pysolr] # Always needs to include everything that's imported above.
+        return [jpylyzer,blitter,pysolr,requests,urllib3,chardet,certifi,idna] # Always needs to include everything that's imported above.
 
     def mapper(self, line):
         """
@@ -362,6 +363,7 @@ class PopulateJpylyzerSolr(luigi.contrib.hadoop.JobTask):
         :param values:
         :return:
         """
+        os.environ['HTTP_PROXY'] = 'http://explorer.bl.uk:3127'
         s = pysolr.Solr(self.solr_endpoint, timeout=30)
 
         if key.startswith("PAYLOAD-"):
