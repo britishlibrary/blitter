@@ -1,0 +1,11 @@
+# Solr instance for running tests against
+solr:
+  image: solr:6
+  ports:
+    - "8983:8983"
+  volumes:
+    - data:/opt/solr/server/solr/mycores
+  entrypoint:
+    - docker-entrypoint.sh
+    - solr-precreate
+    - gb
