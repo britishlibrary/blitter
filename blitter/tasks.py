@@ -1,6 +1,7 @@
 import os
 import time
 import math
+import json
 import luigi
 import luigi.contrib.hdfs
 import luigi.contrib.hadoop
@@ -11,6 +12,7 @@ import xml.etree.ElementTree as ET
 
 import jpylyzer.jpylyzer # Imported from https://github.com/britishlibrary/jpylyzer
 import blitter.genblit
+import pysolr
 
 logger = logging.getLogger('luigi-interface')
 
@@ -292,6 +294,85 @@ class GenerateJpylyzerStats(luigi.contrib.hadoop.JobTask):
         yield key, sum(values)
 
 
+class PopulateJpylyzerSolr(luigi.contrib.hadoop.JobTask):
+    """
+    This class takes the output from Jpylyzer and summary stats
+
+    """
+    input_file = luigi.Parameter()
+    use_local_files = luigi.BoolParameter(default=False)
+    solr_endpoint = luigi.Parameter()
+
+    # Override the default number of reducers (25)
+    n_reduce_tasks = luigi.IntParameter(default=25)
+
+    def requires(self):
+        return RunJpylyzer(self.input_file, use_local_files=self.use_local_files)
+
+    def output(self):
+        out_name = "%s.solr.tsv" % self.input_file
+        if self.use_local_files:
+            return luigi.LocalTarget(out_name)
+        else:
+            return luigi.contrib.hdfs.HdfsTarget(out_name, format=luigi.contrib.hdfs.PlainDir)
+
+    def extra_modules(self):
+        return [jpylyzer,blitter,pysolr] # Always needs to include everything that's imported above.
+
+    def mapper(self, line):
+        """
+        Each line should be an identifier of a JP2 file, e.g. 'vdc_100022551931.0x000001' followed by a string
+        that is the XML output from Jpylyzer.
+
+        In the mapper we re-parse, then convert to blit for output.
+
+        :param line:
+        :return:
+        """
+
+        # Ignore blank lines:
+        if line == '':
+            return
+
+        # Ignore upstream failure:
+        if line.startswith("FAIL "):
+            yield "TOTAL-FAILED", 1
+
+        # Attempt to parse and exit:
+        else:
+            # Split the input:
+            lark, dark, jpylyzer_xml_out = line.strip().split("\t",2)
+
+            # Convert to summary form:
+            j2 = blitter.genblit.to_summary(jpylyzer_xml_out, lark, dark)
+
+            # Yield useful bits to count up:
+            yield "TOTAL-SUCCEEDED", 1
+
+            # Yield the document, to be handled by the reducer
+            print(j2.__dict__)
+            yield "PAYLOAD-%s" % lark, json.dumps(j2.__dict__)
+
+
+    def reducer(self, key, values):
+        """
+        A reducer that passes PAYLOAD items to Solr.
+
+        :param key:
+        :param values:
+        :return:
+        """
+        s = pysolr.Solr(self.solr_endpoint, timeout=30)
+
+        if key.startswith("PAYLOAD-"):
+            docs = []
+            for value in values:
+                docs.append(json.loads(value))
+            s.add(docs, commit=False)
+        else:
+            yield key, sum(values)
+
+
 class GenerateBlit(luigi.contrib.hadoop.JobTask):
     """
     This class takes the output from Jpylyzer and transforms it into 'blit' XML.
@@ -405,7 +486,8 @@ class GenerateBlitZip(luigi.Task):
 
 
 if __name__ == '__main__':
-    luigi.run(['GenerateJpylyzerStats', '--input-file', 'test-data/jpylyzer-mapper-output-example.csv', '--local-scheduler', '--use-local-files'])
+    luigi.run(['PopulateJpylyzerSolr', '--input-file', 'test-data/jpylyzer-mapper-output-example.csv', '--local-scheduler', '--use-local-files', '--solr-endpoint', 'http://localhost:8983/solr/gb'])
+#    luigi.run(['GenerateJpylyzerStats', '--input-file', 'test-data/jpylyzer-mapper-output-example.csv', '--local-scheduler', '--use-local-files'])
     #luigi.run(['GenerateBlitZip', '--input-file', 'test-input.txt', '--local-scheduler'])
     #luigi.run(['GenerateBlitZip', '--input-file', '/blit/Google_DArks_test.csv', '--local-scheduler'])
     #luigi.run(['GenerateBlitZip', '--input-file', '/blit/chunks/Google_DArks_ex_alto.csv.chunk00', '--local-scheduler'])

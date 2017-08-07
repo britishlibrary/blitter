@@ -37,7 +37,13 @@ class JP2Summary:
     Hence, the first (zeroth) resolution does not correspond to a dwt_level. The second (r=1) resolution corresponds to the
     last (N_L - 1) level.
     """
-    def __init__(self, jpylyzer_xml_string):
+    def __init__(self, jpylyzer_xml_string, l_ark=None, d_ark=None):
+        # Set up identifiers, if specified:
+        if l_ark:
+            self.l_ark = l_ark
+        if d_ark:
+            self.d_ark = d_ark
+
         # Parse the string as XML:
         ET.register_namespace("", "http://openpreservation.org/ns/jpylyzer/")
         jpylyzer_xml = ET.fromstring(jpylyzer_xml_string)
@@ -144,8 +150,8 @@ class JP2Summary:
         return pprint.pformat(self.__dict__)
 
 
-def to_summary(jpylyzer_xml):
-    js = JP2Summary(jpylyzer_xml)
+def to_summary(jpylyzer_xml, l_ark=None, d_ark=None):
+    js = JP2Summary(jpylyzer_xml, l_ark, d_ark)
     return js
 
 

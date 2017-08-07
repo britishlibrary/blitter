@@ -9,6 +9,7 @@ idna==2.5
 lockfile==0.12.2
 luigi==2.6.2
 mechanize==0.2.5
+pysolr==3.6.0
 python-daemon==2.1.2
 requests==2.18.1
 singledispatch==3.4.0.3
