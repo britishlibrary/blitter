@@ -361,7 +361,7 @@ class PopulateJpylyzerSolr(luigi.contrib.hadoop.JobTask):
         :param values:
         :return:
         """
-        os.environ['HTTP_PROXY'] = 'http://explorer.bl.uk:3127'
+        os.environ['HTTP_PROXY'] = 'http://explorer:3127'
         s = pysolr.Solr(self.solr_endpoint, timeout=30)
 
         if key.startswith("PAYLOAD-"):
@@ -388,7 +388,8 @@ class PopulateJpylyzerSolr(luigi.contrib.hadoop.JobTask):
                     # Don't bother retrying forever...
                     tries += 1
                     if tries >= 10:
-                        retry = False
+                        # Throw an error rather than failing silently:
+                        raise e
                     # Log what happened:
                     logger.exception(e)
                     logger.info("Caught %i/10 error(s) when submitting to Solr. Sleeping for 30 seconds.")
