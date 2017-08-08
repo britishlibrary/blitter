@@ -367,7 +367,17 @@ class PopulateJpylyzerSolr(luigi.contrib.hadoop.JobTask):
         if key.startswith("PAYLOAD-"):
             docs = []
             for value in values:
-                docs.append(json.loads(value))
+                doc = json.loads(value)
+                # Use a meaningful ID
+                if doc.has_key('d_ark'):
+                    doc['id'] = doc['d_ark']
+                # Patch some key names to perform the correct mappings to Solr Dynamc Fields
+                # (because making things single-valued makes them sortable)
+                doc['compression_ratio_d'] = doc.pop('compression_ratio')
+                doc['filesize_l'] = doc.pop('filesize')
+                doc['height_l'] = doc.pop('height')
+                doc['width_l'] = doc.pop('width')
+                docs.append(doc)
             tries = 0
             retry = True
             while retry:
