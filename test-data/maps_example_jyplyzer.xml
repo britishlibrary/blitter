@@ -1,0 +1,139 @@
+<?xml version="1.0" encoding="us-ascii"?>
+<jpylyzer>
+  <toolInfo>
+    <toolName>jpylyzer.exe</toolName>
+    <toolVersion>1.8.2</toolVersion>
+  </toolInfo>
+  <fileInfo>
+    <fileName>MapsK.Top.31.5.b_tvdc_100002284535.0x000001.jp2</fileName>
+    <filePath>C:\MapsK.Top.31.5.b_tvdc_100002284535.0x000001.jp2</filePath>
+    <fileSizeInBytes>25125425</fileSizeInBytes>
+    <fileLastModified>Wed Aug 02 09:19:23 2017</fileLastModified>
+  </fileInfo>
+  <isValidJP2>True</isValidJP2>
+  <tests />
+  <properties>
+    <signatureBox />
+    <fileTypeBox>
+      <br>jp2 </br>
+      <minV>0</minV>
+      <cL>jp2 </cL>
+    </fileTypeBox>
+    <jp2HeaderBox>
+      <imageHeaderBox>
+        <height>5397</height>
+        <width>6530</width>
+        <nC>3</nC>
+        <bPCSign>unsigned</bPCSign>
+        <bPCDepth>8</bPCDepth>
+        <c>jpeg2000</c>
+        <unkC>yes</unkC>
+        <iPR>no</iPR>
+      </imageHeaderBox>
+      <colourSpecificationBox>
+        <meth>Enumerated</meth>
+        <prec>0</prec>
+        <approx>0</approx>
+        <enumCS>sRGB</enumCS>
+      </colourSpecificationBox>
+    </jp2HeaderBox>
+    <unknownBox>
+      <boxType>XML*</boxType>
+    </unknownBox>
+    <contiguousCodestreamBox>
+      <siz>
+        <lsiz>47</lsiz>
+        <rsiz>ISO/IEC 15444-1</rsiz>
+        <xsiz>6530</xsiz>
+        <ysiz>5397</ysiz>
+        <xOsiz>0</xOsiz>
+        <yOsiz>0</yOsiz>
+        <xTsiz>6530</xTsiz>
+        <yTsiz>5397</yTsiz>
+        <xTOsiz>0</xTOsiz>
+        <yTOsiz>0</yTOsiz>
+        <numberOfTiles>1</numberOfTiles>
+        <csiz>3</csiz>
+        <ssizSign>unsigned</ssizSign>
+        <ssizDepth>8</ssizDepth>
+        <xRsiz>1</xRsiz>
+        <yRsiz>1</yRsiz>
+        <ssizSign>unsigned</ssizSign>
+        <ssizDepth>8</ssizDepth>
+        <xRsiz>1</xRsiz>
+        <yRsiz>1</yRsiz>
+        <ssizSign>unsigned</ssizSign>
+        <ssizDepth>8</ssizDepth>
+        <xRsiz>1</xRsiz>
+        <yRsiz>1</yRsiz>
+      </siz>
+      <cod>
+        <lcod>19</lcod>
+        <precincts>yes</precincts>
+        <sop>no</sop>
+        <eph>no</eph>
+        <order>RPCL</order>
+        <layers>12</layers>
+        <multipleComponentTransformation>yes</multipleComponentTransformation>
+        <levels>6</levels>
+        <codeBlockWidth>64</codeBlockWidth>
+        <codeBlockHeight>64</codeBlockHeight>
+        <codingBypass>yes</codingBypass>
+        <resetOnBoundaries>no</resetOnBoundaries>
+        <termOnEachPass>no</termOnEachPass>
+        <vertCausalContext>no</vertCausalContext>
+        <predTermination>no</predTermination>
+        <segmentationSymbols>no</segmentationSymbols>
+        <transformation>5-3 reversible</transformation>
+        <precinctSizeX>128</precinctSizeX>
+        <precinctSizeY>128</precinctSizeY>
+        <precinctSizeX>128</precinctSizeX>
+        <precinctSizeY>128</precinctSizeY>
+        <precinctSizeX>128</precinctSizeX>
+        <precinctSizeY>128</precinctSizeY>
+        <precinctSizeX>128</precinctSizeX>
+        <precinctSizeY>128</precinctSizeY>
+        <precinctSizeX>128</precinctSizeX>
+        <precinctSizeY>128</precinctSizeY>
+        <precinctSizeX>256</precinctSizeX>
+        <precinctSizeY>256</precinctSizeY>
+        <precinctSizeX>256</precinctSizeX>
+        <precinctSizeY>256</precinctSizeY>
+      </cod>
+      <qcd>
+        <lqcd>22</lqcd>
+        <qStyle>no quantization</qStyle>
+        <guardBits>1</guardBits>
+        <epsilon>10</epsilon>
+        <epsilon>11</epsilon>
+        <epsilon>11</epsilon>
+        <epsilon>12</epsilon>
+        <epsilon>11</epsilon>
+        <epsilon>11</epsilon>
+      </qcd>
+      <com>
+        <lcom>15</lcom>
+        <rcom>ISO/IEC 8859-15 (Latin)</rcom>
+        <comment>Kakadu-v7.1</comment>
+      </com>
+      <com>
+        <lcom>279</lcom>
+        <rcom>ISO/IEC 8859-15 (Latin)</rcom>
+        <comment>Kdu-Layer-Info: log_2{Delta-D(squared-error)/Delta-L(bytes)}, L(bytes)* -21.3, 3.3e+005* -23.0, 6.6e+005* -25.0, 1.3e+006* -27.5, 2.6e+006* -30.3, 5.3e+006* -32.2, 9.3e+006* -35.6, 1.5e+007* -39.3, 2.3e+007*-192.0, 3.1e+007*-192.0, 3.8e+007*-192.0, 4.4e+007*-192.0, 2.5e+007*</comment>
+      </com>
+      <tileParts>
+        <tilePart>
+          <sot>
+            <lsot>10</lsot>
+            <isot>0</isot>
+            <psot>25124742</psot>
+            <tpsot>0</tpsot>
+            <tnsot>1</tnsot>
+          </sot>
+          <plt />
+        </tilePart>
+      </tileParts>
+    </contiguousCodestreamBox>
+    <compressionRatio>4.21</compressionRatio>
+  </properties>
+</jpylyzer>
