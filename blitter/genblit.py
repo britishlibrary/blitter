@@ -82,11 +82,14 @@ class JP2Summary:
                     ns).text
                 self.resolution_source = "displayResolutionBox"
             except:
-                num, denom = prop.find('.//tiff:XResolution', ns).text.split('/')
-                self.resolution_v_ppi = str(int(float(num) / float(denom)))
-                num, demon = prop.find('.//tiff:YResolution', ns).text.split('/')
-                self.resolution_h_ppi = str(int(float(num) / float(denom)))
-                self.resolution_source = "tiffResolution"
+                try:
+                    num, denom = prop.find('.//tiff:XResolution', ns).text.split('/')
+                    self.resolution_v_ppi = str(int(float(num) / float(denom)))
+                    num, demon = prop.find('.//tiff:YResolution', ns).text.split('/')
+                    self.resolution_h_ppi = str(int(float(num) / float(denom)))
+                    self.resolution_source = "tiffResolution"
+                except:
+                    self.resolution_source = "none"
 
         self.channels = prop.find('jpy:jp2HeaderBox/jpy:imageHeaderBox/jpy:nC', ns).text
 
@@ -185,13 +188,14 @@ def to_blit_via(jpylyzer_xml):
     dimh.set("unit", "pixel")
     dimh.text = js.height
 
-    res = ET.SubElement(image, "blit:resolution")
-    resv = ET.SubElement(res, "blit:x")
-    resv.set("unit", "ppi")
-    resh = ET.SubElement(res, "blit:y")
-    resh.set("unit", "ppi")
-    resv.text = js.resolution_v_ppi
-    resh.text = js.resolution_h_ppi
+    if js.resolution_source != 'none':
+        res = ET.SubElement(image, "blit:resolution")
+        resv = ET.SubElement(res, "blit:x")
+        resv.set("unit", "ppi")
+        resh = ET.SubElement(res, "blit:y")
+        resh.set("unit", "ppi")
+        resv.text = js.resolution_v_ppi
+        resh.text = js.resolution_h_ppi
 
     chan = ET.SubElement(image, "blit:channels")
     chan.text = js.channels
@@ -315,10 +319,13 @@ def to_blit(jpylyzer_xml):
             resh.text = prop.find('jpy:jp2HeaderBox/jpy:resolutionBox/jpy:displayResolutionBox/jpy:vResdInPixelsPerInch',
                       ns).text
         except:
-            num, denom = prop.find('.//tiff:XResolution', ns).text.split('/')
-            resh.text = str(int(float(num)/float(denom)))
-            num, demon = prop.find('.//tiff:YResolution', ns).text.split('/')
-            resv.text = str(int(float(num)/float(denom)))
+            try:
+                num, denom = prop.find('.//tiff:XResolution', ns).text.split('/')
+                resh.text = str(int(float(num)/float(denom)))
+                num, demon = prop.find('.//tiff:YResolution', ns).text.split('/')
+                resv.text = str(int(float(num)/float(denom)))
+            except:
+                pass
 
     chan = ET.SubElement(image, "blit:channels")
     chan.text = prop.find('jpy:jp2HeaderBox/jpy:imageHeaderBox/jpy:nC', ns).text
