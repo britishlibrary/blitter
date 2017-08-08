@@ -351,9 +351,7 @@ class PopulateJpylyzerSolr(luigi.contrib.hadoop.JobTask):
             yield "TOTAL-SUCCEEDED", 1
 
             # Yield the document, to be handled by the reducer
-            print(j2.__dict__)
             yield "PAYLOAD-%s" % lark, json.dumps(j2.__dict__)
-
 
     def reducer(self, key, values):
         """
@@ -370,7 +368,22 @@ class PopulateJpylyzerSolr(luigi.contrib.hadoop.JobTask):
             docs = []
             for value in values:
                 docs.append(json.loads(value))
-            s.add(docs, commit=False)
+            tries = 0
+            retry = True
+            while retry:
+                try:
+                    s.add(docs, commit=False)
+                    retry = False
+                except pysolr.SolrError as e:
+                    # Don't bother retrying forever...
+                    tries += 1
+                    if tries >= 10:
+                        retry = False
+                    # Log what happened:
+                    logger.exception(e)
+                    logger.info("Caught %i/10 error(s) when submitting to Solr. Sleeping for 30 seconds.")
+                    # Wait before retrying:
+                    time.sleep(30)
         else:
             yield key, sum(values)
 
